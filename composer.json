@@ -1,0 +1,46 @@
+{
+    "name": "stromcom/php-snippet",
+    "description": "PHP library for generating STROMCOM integration snippets",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["stromcom", "snippet", "chat", "widget", "integration"],
+    "require": {
+        "php": "^8.4",
+        "tuupola/base62": "^2.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5",
+        "phpstan/phpstan": "^2.1",
+        "friendsofphp/php-cs-fixer": "^3.94"
+    },
+    "scripts": {
+        "test:unit": "phpunit",
+        "phpstan": "vendor/bin/phpstan analyse -c phpstan.dist.neon",
+        "cs:check": "php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "php-cs-fixer fix",
+        "test": [
+            "@test:unit"
+        ],
+        "ca": [
+            "@phpstan",
+            "@cs:check"
+        ]
+    },
+    "autoload": {
+        "psr-4": {
+            "Stromcom\\Snippet\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Stromcom\\Snippet\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Petr Bíža",
+            "email": "petr.biza@stromcom.cz"
+        }
+    ],
+    "minimum-stability": "stable"
+}

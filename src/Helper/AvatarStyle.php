@@ -25,7 +25,7 @@ enum AvatarStyle: string {
   public function generateUrl(string $emailOrHash): string {
     $hash = (mb_strlen($emailOrHash) === 32 && ctype_xdigit($emailOrHash))
         ? $emailOrHash
-        : md5(mb_strtolower(mb_trim($emailOrHash)));
+        : md5(mb_strtolower(trim($emailOrHash)));
 
     return sprintf('https://gravatar.com/avatar/%s?s=100&r=g&d=%s', $hash, $this->value);
   }

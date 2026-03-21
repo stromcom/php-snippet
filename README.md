@@ -1,8 +1,8 @@
 # stromcom/snippet-php
 PHP library for generating [STROMCOM](https://www.stromcom.cz) integration snippets.
-Generates the JavaScript code you embed on your page to load the STROMCOM chat widget, identify users, and attach threads. No runtime dependencies — pure PHP 8.4.
+Generates the JavaScript code you embed on your page to load the STROMCOM chat widget, identify users, and attach threads. No runtime dependencies — pure PHP 8.2+.
 ## Requirements
-- PHP **8.4+**
+- PHP **8.2+**
 ## Installation
 ```bash
 composer require stromcom/php-snippet

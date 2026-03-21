@@ -1,11 +1,12 @@
 # Changelog
 
+## [0.2.0] - 2026-03-21
+### Changed
+- Minimum PHP version lowered from 8.4 to **8.2**
+
 ## [0.1.0] - 2026-03-21
-
 > ⚠️ **Pre-release – for testing only.** The API may change without notice.
-
 ### Added
-
 - JS snippet code generation for the STROMCOM chat widget (loader, user, thread, conf, home)
 - `SnippetClient` and `SnippetClientFactory` for easy initialization
 - Automatic HMAC hashing of user/thread codes (`HmacCodeHasher`, `Base62CodeHasher`)

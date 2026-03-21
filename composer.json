@@ -5,7 +5,7 @@
     "license": "MIT",
     "keywords": ["stromcom", "snippet", "chat", "widget", "integration"],
     "require": {
-        "php": "^8.4",
+        "php": "^8.2",
         "tuupola/base62": "^2.1"
     },
     "require-dev": {

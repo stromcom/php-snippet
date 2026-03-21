@@ -10,8 +10,8 @@ namespace Stromcom\Snippet\Internal;
  */
 class JsValue implements \JsonSerializable {
 
-  private const string PLACEHOLDER_PREFIX = '__JS_VALUE_';
-  private const string PLACEHOLDER_SUFFIX = '__';
+  private const PLACEHOLDER_PREFIX = '__JS_VALUE_';
+  private const PLACEHOLDER_SUFFIX = '__';
 
   private string $value;
   private string $placeholder;

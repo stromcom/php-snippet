@@ -40,6 +40,41 @@ echo $client->thread('#support-chat', new ThreadOptions(
 ))->getHTML();
 ```
 
+### Generated output
+
+```html
+<!-- snippet() — loader bootstrap -->
+<script>
+  (function(win, d, e, l, k, s) {
+  var dl=l+'DL',c=function(s,n,a){n=n||s;(a?win[dl][n]=[]:null);win[l][s]=function(...p){a?win[dl][n].push(p):win[dl][n]=p;}},f=d.getElementsByTagName(e)[0],j=d.createElement(e);
+  win[dl]=win[dl]||{};win[l]={};c('initUser','user');c('thread','threads',!0);c('conf');c('home',0,!0);
+  ;j.async=true;j.dataset.type='stromcom';j.dataset.l=l;j.dataset.dl=dl;j.dataset.ck=k;j.dataset.cs=s;
+  j.src = "https://cdn.stromcom.cz/loader.js?"+k;f.parentNode.insertBefore(j,f);
+  })(window, document, 'script', "stromCom", "your-client-key", "your-bearer-token");
+</script>
+
+<!-- user() — raw ID is HMAC-SHA256 + base-62 encoded -->
+<script>
+  stromCom.initUser({
+    "code": "fsbARKQmdbVZkaxP9fQPrQjrUwgmceVFoBPPKc5nZQD",
+    "name": "Jane Doe",
+    "emailAddress": "jane@example.com",
+    "avatarURL": "https://example.com/avatars/jane.png"
+  });
+</script>
+
+<!-- thread() — thread code is hashed the same way -->
+<script>
+  stromCom.thread(document.querySelector("#support-chat"), {
+    "code": "UOONLyVBicFCCTyIdiSGX7YxpZm1g449KLnPKLvg7fd",
+    "name": "Order #12345",
+    "url": "https://yourapp.com/orders/12345"
+  });
+</script>
+```
+
+A runnable version of this example is available in [`examples/basic.php`](examples/basic.php).
+
 ## Environments
 The default environment is **production**. Use `Environment::STAGING` for the staging CDN, or `CustomEnvironment` for any custom URL (testing, self-hosted, localhost).
 ```php
@@ -184,5 +219,14 @@ Pass `withDocs: true` to the constructor (or per method) to generate annotated c
 $client = new SnippetClient('key', 'secret', withDocs: true);
 
 echo $client->user(new UserOptions('u1'))->getHTML();
-// outputs: stromCom.initUser({ /** User unique code (required) */ "code": "u1", … });
+```
+```html
+<script>
+  stromCom.initUser({
+    /**
+     * Unique user code. Cannot be changed later. Max length 100. Allowed characters: [a-zA-Z0-9-_] (required)
+     */
+    "code": "u1"
+  });
+</script>
 ```

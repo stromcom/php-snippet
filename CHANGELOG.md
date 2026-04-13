@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.1] - 2026-03-21
+### Changed
+- Add examples
+
 ## [0.2.0] - 2026-03-21
 ### Changed
 - Minimum PHP version lowered from 8.4 to **8.2**

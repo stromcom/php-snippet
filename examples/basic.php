@@ -15,12 +15,14 @@ $client = SnippetClientFactory::create(
     codeHashSecret: 'your-app-secret',  // enables automatic HMAC-SHA256 + base-62 hashing
 );
 
-// ── 1. Loader ────────────────────────────────────────────────────────────────
+
+/** 1. Loader */
 // Place this once in <head> or just before </body> on every page.
 echo $client->snippet()->getHTML();
 echo "\n\n";
 
-// ── 2. User identification ───────────────────────────────────────────────────
+
+/** 2. User identification */
 // Identify the currently logged-in user.
 // The raw 'user-id-42' is HMAC-hashed and base-62 encoded before output,
 // so your internal ID is never exposed to the browser.
@@ -32,7 +34,8 @@ echo $client->user(new UserOptions(
 ))->getHTML();
 echo "\n\n";
 
-// ── 3. Thread ────────────────────────────────────────────────────────────────
+
+/** 3. Thread */
 // Embed a conversation thread into a DOM element.
 echo $client->thread('#support-chat', new ThreadOptions(
     code: 'order-12345',
@@ -41,12 +44,14 @@ echo $client->thread('#support-chat', new ThreadOptions(
 ))->getHTML();
 echo "\n\n";
 
-// ── 4. Notification center ───────────────────────────────────────────────────
+
+/** 4. Notification center */
 // Embed the notification center icon into a DOM element.
 echo $client->home('#notifications')->getHTML();
 echo "\n\n";
 
-// ── 5. SDK configuration (optional) ─────────────────────────────────────────
+
+/** 5. SDK configuration (optional) */
 // Customise the widget behaviour. Only non-default values are emitted.
 echo $client->conf(new ConfOptions(
     notificationElementPosition: 4,  // 1=top-left  2=top-right  3=bottom-right  4=bottom-left

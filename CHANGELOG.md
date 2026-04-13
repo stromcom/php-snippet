@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.0] - 2026-04-13
+### Changed
+- Add createHasher method to SnippetClientFactory for secure code generation
+
 ## [0.2.1] - 2026-03-21
 ### Changed
 - Add examples

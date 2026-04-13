@@ -7,6 +7,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use Stromcom\Snippet\Environment\Environment;
+use Stromcom\Snippet\Hashing\CodeHasherInterface;
 use Stromcom\Snippet\Options\UserOptions;
 use Stromcom\Snippet\SnippetClient;
 use Stromcom\Snippet\SnippetClientFactory;
@@ -69,6 +70,36 @@ class SnippetClientFactoryTest extends TestCase {
     $matched = preg_match('/"code"\s*:\s*"([^"]+)"/', $code, $matches);
     $this->assertSame(1, $matched);
     $this->assertMatchesRegularExpression('/^[0-9A-Za-z]+$/', $matches[1]);
+  }
+
+  #[Test]
+  public function createHasher_returns_code_hasher_interface(): void {
+    $this->assertInstanceOf(CodeHasherInterface::class, SnippetClientFactory::createHasher('secret'));
+  }
+
+  #[Test]
+  public function createHasher_produces_alphanumeric_output_by_default(): void {
+    $hasher = SnippetClientFactory::createHasher('secret');
+
+    $this->assertMatchesRegularExpression('/^[0-9A-Za-z]+$/', $hasher->hash('user-42'));
+  }
+
+  #[Test]
+  public function createHasher_produces_hex_when_base62_is_disabled(): void {
+    $hasher = SnippetClientFactory::createHasher('secret', codeHashBase62: false);
+
+    $this->assertMatchesRegularExpression('/^[0-9a-f]+$/', $hasher->hash('user-42'));
+  }
+
+  #[Test]
+  public function createHasher_output_matches_code_embedded_by_create(): void {
+    $hasher = SnippetClientFactory::createHasher('app-secret');
+    $client = SnippetClientFactory::create('key', 'secret', codeHashSecret: 'app-secret');
+
+    $expected = $hasher->hash('user-42');
+    $js       = $client->user(new UserOptions('user-42'))->getCode();
+
+    $this->assertStringContainsString($expected, $js);
   }
 
   #[Test]

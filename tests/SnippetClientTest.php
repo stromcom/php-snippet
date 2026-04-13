@@ -28,8 +28,6 @@ class SnippetClientTest extends TestCase {
     $this->client = new SnippetClient('test-key', 'test-secret', Environment::PRODUCTION);
   }
 
-  // ── snippet() ────────────────────────────────────────────────
-
   #[Test]
   public function snippet_returns_snippet_code(): void {
     $this->assertInstanceOf(SnippetCode::class, $this->client->snippet());
@@ -61,8 +59,6 @@ class SnippetClientTest extends TestCase {
     $this->assertStringEndsWith('</script>', $html);
   }
 
-  // ── conf() ───────────────────────────────────────────────────
-
   #[Test]
   public function conf_output_contains_conf_call(): void {
     $code = $this->client->conf(new ConfOptions())->getCode();
@@ -75,16 +71,12 @@ class SnippetClientTest extends TestCase {
     $this->assertStringContainsString('onLoad', $code);
   }
 
-  // ── user() ───────────────────────────────────────────────────
-
   #[Test]
   #[DataProvider('userOutputTokens')]
   public function user_output_contains_expected_tokens(string $expectedToken): void {
     $code = $this->client->user(new UserOptions('abc123'))->getCode();
     $this->assertStringContainsString($expectedToken, $code);
   }
-
-  // ── thread() ─────────────────────────────────────────────────
 
   #[Test]
   #[DataProvider('threadOutputTokens')]
@@ -93,16 +85,12 @@ class SnippetClientTest extends TestCase {
     $this->assertStringContainsString($expectedToken, $code);
   }
 
-  // ── home() ───────────────────────────────────────────────────
-
   #[Test]
   #[DataProvider('homeOutputTokens')]
   public function home_output_contains_expected_tokens(string $expectedToken): void {
     $code = $this->client->home('#notifications')->getCode();
     $this->assertStringContainsString($expectedToken, $code);
   }
-
-  // ── data layer ───────────────────────────────────────────────
 
   #[Test]
   public function custom_data_layer_is_used_in_all_methods(): void {
@@ -148,9 +136,6 @@ class SnippetClientTest extends TestCase {
       'query selector' => ['#notifications'],
     ];
   }
-
-  // ── exceptions ───────────────────────────────────────────────
-
   /**
    * @param callable(self): void     $action
    * @param class-string<\Throwable> $expectedException
@@ -199,8 +184,6 @@ class SnippetClientTest extends TestCase {
     ];
   }
 
-  // ── docs mode ────────────────────────────────────────────────
-
   #[Test]
   public function with_docs_enabled_globally_adds_docs_to_user(): void {
     $client = new SnippetClient('key', 'secret', Environment::PRODUCTION, null, true);
@@ -214,8 +197,6 @@ class SnippetClientTest extends TestCase {
     $code   = $client->user(new UserOptions('u1'), true)->getCode();
     $this->assertStringContainsString('/**', $code);
   }
-
-  // ── code hashing ─────────────────────────────────────────────
 
   #[Test]
   #[DataProvider('hashingScenarios')]

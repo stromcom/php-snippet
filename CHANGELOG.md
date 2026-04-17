@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.1] - 2026-04-17
+### Changed
+- Add theme support to ConfOptions
+
 ## [0.3.0] - 2026-04-13
 ### Changed
 - Add createHasher method to SnippetClientFactory for secure code generation

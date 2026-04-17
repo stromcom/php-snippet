@@ -201,6 +201,7 @@ See the full list of parameters in [`src/Options/ConfOptions.php`](src/Options/C
 | `pageCSSPath` | `?string` | CSS file URL injected into the snippet iframe. |
 | `notificationElementTargetElement` | `?string` | JS expression returning the target DOM element. |
 | `notificationElementPosition` | `?int` | Icon position: 1=top-left, 2=top-right, 3=bottom-right, 4=bottom-left. |
+| `theme` | `?string` | Light/dark mode for the app. Values: `null` (follows browser preference), `stromcom-light`, `stromcom-dark`. |
 ## Avatar helper
 `AvatarStyle` generates Gravatar URLs without any external dependency:
 ```php

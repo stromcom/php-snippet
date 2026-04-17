@@ -45,6 +45,9 @@ class ConfOptions extends SnippetOptions {
   #[Docs('Callback invoked after the notification element is rendered', null, true, 'Function|null')]
   private ?string $notificationElementAfterRender = null;
 
+  #[Docs('Theme name applied to the host page via data-theme on <html>. Available: stromcom-default, stromcom-dark', 'stromcom-dark', true)]
+  private ?string $theme = null;
+
   /** @param array<string, string|int|float|null>|null $notificationElementStyles */
   public function __construct(
     ?string $notificationRenderer = null,
@@ -59,6 +62,7 @@ class ConfOptions extends SnippetOptions {
     ?string $notificationElementBeforeRender = null,
     ?string $notificationElementAfterRender = null,
     ?string $homeBeforeRender = null,
+    ?string $theme = null,
   ) {
     $this->notificationRenderer             = $notificationRenderer;
     $this->onNotification                   = $onNotification;
@@ -72,6 +76,7 @@ class ConfOptions extends SnippetOptions {
     $this->notificationElementBeforeRender  = $notificationElementBeforeRender;
     $this->notificationElementAfterRender   = $notificationElementAfterRender;
     $this->homeBeforeRender                 = $homeBeforeRender;
+    $this->theme                            = $theme;
   }
 
   public function getNotificationRenderer(): ?string {
@@ -145,6 +150,10 @@ class ConfOptions extends SnippetOptions {
 
   public function renderNotificationElementAfterRender(): ?JsValue {
     return $this->wrapJsValue($this->notificationElementAfterRender);
+  }
+
+  public function getTheme(): ?string {
+    return $this->theme;
   }
 
   private function wrapJsValue(?string $value): ?JsValue {

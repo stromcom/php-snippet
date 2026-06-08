@@ -23,7 +23,7 @@ abstract class SnippetOptions {
       $name         = $Property->getName();
       $currentValue = $this->resolvePropertyValue($Property);
 
-      $includeByDefault = $currentValue !== $Property->getDefaultValue();
+      $includeByDefault = $currentValue !== ($Property->hasDefaultValue() ? $Property->getDefaultValue() : null);
       $includeForDocs   = $withDocs && $currentValue === null && ($Docs?->isShowNullInDocs() ?? false);
 
       if ($includeByDefault || $includeForDocs) {

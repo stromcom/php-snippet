@@ -45,10 +45,11 @@ abstract class SnippetOptions {
 
     foreach ($Reflection->getProperties(\ReflectionProperty::IS_PRIVATE) as $Property) {
       $Docs = self::resolvePropertyDocs($Property);
+      $hasDefaultValue = $Property->hasDefaultValue();
 
       $result[$Property->getName()] = [
-        'default'          => $Property->getDefaultValue(),
-        'required'         => !$Property->hasDefaultValue(),
+        'default'          => $hasDefaultValue ? $Property->getDefaultValue() : null,
+        'required'         => !$hasDefaultValue,
         'docs'             => $Docs?->getDocs(),
         'example'          => $Docs?->getExample(),
         'type'             => $Docs?->getType(),

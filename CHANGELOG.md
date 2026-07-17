@@ -14,6 +14,14 @@
 - `CspException` for an invalid nonce or an origin that is neither known nor given
 - CSP section in the README and a runnable `examples/csp.php`
 
+## [0.3.3] - 2026-06-09
+### Fixed
+- Default value handling in `SnippetOptions` for properties without a declared default (follow-up to 0.3.2 — the previous fix still relied on `null` in one more spot)
+
+## [0.3.2] - 2026-06-08
+### Fixed
+- Default value resolution in `SnippetOptions` for properties without a default — `getDefaultValue()` was called unguarded, relying on `null` for properties that have no declared default instead of checking `hasDefaultValue()` first
+
 ## [0.3.1] - 2026-04-17
 ### Changed
 - Add theme support to ConfOptions

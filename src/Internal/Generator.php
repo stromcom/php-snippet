@@ -31,18 +31,21 @@ class Generator {
     $this->nonce = $nonce;
   }
 
-  public function generateSnippet(string $loaderUrl, string $clientKey, string $clientSecret): SnippetCode {
+  public function generateSnippet(string $loaderUrl, string $clientKey, string $clientSecret, ?string $language = null): SnippetCode {
     try {
       $layer  = $this->jsonEncode($this->dataLayer);
       $url    = $this->jsonEncode($loaderUrl . '?');
       $key    = $this->jsonEncode($clientKey);
       $secret = $this->jsonEncode($clientSecret);
+      $lang   = $language !== null ? $this->jsonEncode($language) : null;
+
+      $langAssign = $lang !== null ? "j.dataset.lang={$lang};" : '';
 
       return new SnippetCode(<<<JS
               (function(win, d, e, l, k, s) {
               var dl=l+'DL',c=function(s,n,a){n=n||s;(a?win[dl][n]=[]:null);win[l][s]=function(...p){a?win[dl][n].push(p):win[dl][n]=p;}},f=d.getElementsByTagName(e)[0],j=d.createElement(e);
               win[dl]=win[dl]||{};win[l]={};c('initUser','user');c('thread','threads',!0);c('conf');c('home',0,!0);
-              ;j.async=true;j.dataset.type='stromcom';j.dataset.l=l;j.dataset.dl=dl;j.dataset.ck=k;j.dataset.cs=s;
+              ;j.async=true;j.dataset.type='stromcom';j.dataset.l=l;j.dataset.dl=dl;j.dataset.ck=k;j.dataset.cs=s;{$langAssign}
               j.src = {$url}+k;f.parentNode.insertBefore(j,f);
               })(window, document, 'script', {$layer}, {$key}, {$secret});
             JS, $this->nonce);

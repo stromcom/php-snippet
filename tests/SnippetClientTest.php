@@ -56,6 +56,18 @@ class SnippetClientTest extends TestCase {
   }
 
   #[Test]
+  public function snippet_without_language_omits_lang_dataset(): void {
+    $code = $this->client->snippet()->getCode();
+    $this->assertStringNotContainsString('dataset.lang', $code);
+  }
+
+  #[Test]
+  public function snippet_with_language_sets_lang_dataset(): void {
+    $code = $this->client->snippet('cs')->getCode();
+    $this->assertStringContainsString('j.dataset.lang="cs"', $code);
+  }
+
+  #[Test]
   public function snippet_html_is_wrapped_in_script_tags(): void {
     $html = $this->client->snippet()->getHTML();
     $this->assertStringStartsWith('<script>', $html);

@@ -90,6 +90,21 @@ class ConfOptionsTest extends TestCase {
   }
 
   #[Test]
+  public function entity_resolve_string_is_wrapped_in_js_value(): void {
+    $options = new ConfOptions(entityResolve: 'async ({type, id}) => ({title: `${type} #${id}`})');
+    $result  = $options->getOptions();
+
+    $this->assertArrayHasKey('entityResolve', $result);
+    $this->assertInstanceOf(JsValue::class, $result['entityResolve']);
+  }
+
+  #[Test]
+  public function entity_resolve_null_renders_as_null(): void {
+    $options = new ConfOptions();
+    $this->assertNull($options->renderEntityResolve());
+  }
+
+  #[Test]
   public function get_options_with_docs_returns_all_property_schemas(): void {
     $schema = ConfOptions::getOptionsWithDocs();
 

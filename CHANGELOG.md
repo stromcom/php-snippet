@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.0] - 2026-08-07
+### Added
+- `entityResolve` callback option on `ConfOptions` — resolves business-entity detail for the message editor's chip hover-card
+- Optional `$language` parameter on `SnippetClient::snippet()` to force the widget UI language (`data-lang`)
+
 ## [0.3.4] - 2026-08-07
 ### Added
 - `CspPolicy` — builds the Content-Security-Policy directives the host page needs (`script-src`, `connect-src`, `style-src`, `img-src`, `frame-src`); exposes `getDirectives()`, `getHeaderName()`, `getHeaderValue()` and `getMetaTag()`. Only the CDN origin comes from the loader URL; the API and application origins are taken from the environment or from the `apiUrl` / `applicationUrl` arguments, and an unknown origin throws a `CspException` instead of producing a guessed policy that would silently block the widget

@@ -102,6 +102,89 @@ class MyEnv implements EnvironmentInterface {
 
 $client = new SnippetClient('key', 'secret', new MyEnv());
 ```
+## Content Security Policy
+If your page sends a `Content-Security-Policy`, it has to allow the sources the widget uses. For **production** these are:
+```
+script-src  https://cdn.stromcom.cz
+connect-src https://www.stromcom.cz
+style-src   https://cdn.stromcom.cz
+img-src     data:
+frame-src   https://app.stromcom.cz
+```
+| Directive | Why |
+|---|---|
+| `script-src` | The loader and the widget bundle are served from the CDN. |
+| `connect-src` | The widget polls the notification API on the STROMCOM site. |
+| `style-src` | The widget stylesheets are served from the CDN. |
+| `img-src` | Built-in icons (e.g. the loading spinner) are inlined as `data:` URIs. |
+| `frame-src` | The chat itself runs in an iframe on the application origin. |
+
+**Avatars, attachments, fonts and media do not need any directive on your page** — they are loaded *inside* the iframe and are therefore covered by the policy of the application origin, not by yours.
+
+`'unsafe-inline'` is not needed either — see [Nonce for inline scripts](#nonce-for-inline-scripts) below for the `<script>` tags this library generates.
+
+### `CspPolicy`
+Instead of copying the list around, let the library build it for the environment you use:
+```php
+use Stromcom\Snippet\CspPolicy;
+use Stromcom\Snippet\Environment\Environment;
+
+$policy = new CspPolicy(Environment::PRODUCTION);
+
+header($policy->getHeaderName() . ': ' . $policy->getHeaderValue());
+// Content-Security-Policy: script-src https://cdn.stromcom.cz; connect-src https://www.stromcom.cz; …
+
+echo $policy->getMetaTag();
+// <meta http-equiv="Content-Security-Policy" content="script-src https://cdn.stromcom.cz; …">
+```
+`getDirectives()` returns `directive => list of sources`, so you can merge STROMCOM into a policy you already have:
+```php
+$ownPolicy = ['default-src' => ["'self'"], 'script-src' => ["'self'"]];
+
+foreach ($policy->getDirectives() as $directive => $sources) {
+    $ownPolicy[$directive] = [...$ownPolicy[$directive] ?? [], ...$sources];
+}
+```
+`Environment::PRODUCTION` and `Environment::STAGING` know all their origins, so nothing else is needed for them. For a `CustomEnvironment` the API and application origins are **not** guessed from the loader URL — they are separate hosts, and a wrong guess would silently produce a policy that blocks the widget. Give them to the environment:
+```php
+$environment = new CustomEnvironment(
+    'https://cdn.example.com/loader.js',
+    'https://example.com',       // API — the origin the widget polls
+    'https://chat.example.com',  // application — the origin of the iframe
+);
+
+$policy = new CspPolicy($environment);
+```
+…or straight to the policy, which also overrides what the environment says:
+```php
+$policy = new CspPolicy($environment, apiUrl: 'https://example.com', applicationUrl: 'https://chat.example.com');
+```
+If neither provides them, `CspPolicy` throws a `CspException` naming the directive it could not build and the argument to pass.
+
+> **Writing your own `EnvironmentInterface`?** `CspPolicy` reads the two origins from `OriginAwareEnvironmentInterface`, which extends `EnvironmentInterface` with `getApiUrl()` and `getApplicationUrl()` (both may return `null` when unknown). Either implement it as well, or pass `apiUrl` / `applicationUrl` to `CspPolicy`. Implementations of plain `EnvironmentInterface` keep working everywhere else — the extra interface only matters for CSP.
+
+### Nonce for inline scripts
+`getHTML()` emits an inline `<script>` tag. Rather than allowing `'unsafe-inline'`, pass the nonce of the current response — it is set **once** and applied to every tag the client generates:
+```php
+$nonce = base64_encode(random_bytes(16));  // a new value for every response
+
+$client = SnippetClientFactory::create(
+    clientKey:    'key',
+    clientSecret: 'secret',
+    nonce:        $nonce,
+);
+
+// The same nonce ends up in script-src
+header($client->csp()->getHeaderName() . ': ' . $client->csp()->getHeaderValue());
+// … script-src https://cdn.stromcom.cz 'nonce-4mB1r0EYA0lZ2Kk1J7bWpQ=='; …
+
+echo $client->snippet()->getHTML();
+// <script nonce="4mB1r0EYA0lZ2Kk1J7bWpQ==">…</script>
+```
+The nonce must be a non-empty base64 value (`[A-Za-z0-9+/=_-]`); anything else throws a `CspException`. `getCode()` is unaffected — it still returns the raw JavaScript. Without a nonce the output is unchanged, so upgrading changes nothing for existing integrations.
+
+A runnable version of these examples is in [`examples/csp.php`](examples/csp.php).
+
 ## Code hashing
 User and thread `code` values should be hard to guess. Instead of hashing IDs manually, enable automatic hashing and every `user()` / `thread()` call will HMAC-hash the code for you.
 
@@ -175,7 +258,7 @@ $client = new SnippetClient('key', 'secret', codeHasher: new MyCustomHasher());
 | `home(string $selector)` | Embeds the notification center into a DOM element. |
 All methods return a `SnippetCode` object with:
 - `->getCode()` — raw JavaScript string
-- `->getHTML()` — wrapped in `<script>…</script>`
+- `->getHTML()` — wrapped in `<script>…</script>` (with a `nonce` attribute when a nonce is configured)
 ## Options reference
 ### `UserOptions`
 | Parameter | Type | Required | Description |

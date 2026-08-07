@@ -6,12 +6,14 @@ namespace Stromcom\Snippet;
 use Stromcom\Snippet\Environment\Environment;
 use Stromcom\Snippet\Environment\EnvironmentInterface;
 use Stromcom\Snippet\Exception\ConfGenerationException;
+use Stromcom\Snippet\Exception\CspException;
 use Stromcom\Snippet\Exception\HomeGenerationException;
 use Stromcom\Snippet\Exception\SnippetGenerationException;
 use Stromcom\Snippet\Exception\ThreadGenerationException;
 use Stromcom\Snippet\Exception\UserGenerationException;
 use Stromcom\Snippet\Hashing\CodeHasherInterface;
 use Stromcom\Snippet\Internal\Generator;
+use Stromcom\Snippet\Internal\NonceValidator;
 use Stromcom\Snippet\Options\ConfOptions;
 use Stromcom\Snippet\Options\SnippetOptions;
 use Stromcom\Snippet\Options\ThreadOptions;
@@ -28,6 +30,9 @@ class SnippetClient {
    * @param string|null              $dataLayer    Custom JS data-layer name (default: "stromCom")
    * @param bool                     $withDocs     Output annotated code with inline JSDoc comments
    * @param CodeHasherInterface|null $codeHasher   When set, `code` in UserOptions/ThreadOptions is automatically hashed via the given hasher
+   * @param string|null              $nonce        CSP nonce of the page; every generated <script> tag is rendered with it
+   *
+   * @throws CspException when the nonce is not a valid base64 value
    */
   public function __construct(
     private string $clientKey,
@@ -36,8 +41,18 @@ class SnippetClient {
     ?string $dataLayer = null,
     bool $withDocs = false,
     private ?CodeHasherInterface $codeHasher = null,
+    private ?string $nonce = null,
   ) {
-    $this->generator = new Generator($dataLayer, $withDocs);
+    $this->nonce     = NonceValidator::validate($nonce);
+    $this->generator = new Generator($dataLayer, $withDocs, $this->nonce);
+  }
+
+  /**
+   * Content-Security-Policy the host page needs for the widget, pre-filled with this
+   * client's environment and nonce.
+   */
+  public function csp(): CspPolicy {
+    return new CspPolicy($this->environment, $this->nonce);
   }
 
   /**

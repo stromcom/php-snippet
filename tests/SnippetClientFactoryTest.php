@@ -14,6 +14,8 @@ use Stromcom\Snippet\SnippetClientFactory;
 
 class SnippetClientFactoryTest extends TestCase {
 
+  private const NONCE = 'r4nd0m+No/nce==';
+
   #[Test]
   public function create_returns_snippet_client(): void {
     $client = SnippetClientFactory::create('key', 'secret');
@@ -58,6 +60,13 @@ class SnippetClientFactoryTest extends TestCase {
     $code   = $client->user(new UserOptions('u1'))->getCode();
 
     $this->assertStringContainsString('/**', $code);
+  }
+
+  #[Test]
+  public function create_passes_nonce_to_generated_script_tags(): void {
+    $client = SnippetClientFactory::create('key', 'secret', nonce: self::NONCE);
+
+    $this->assertStringStartsWith('<script nonce="' . self::NONCE . '">', $client->snippet()->getHTML());
   }
 
   #[Test]

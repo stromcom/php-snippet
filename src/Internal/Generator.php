@@ -23,10 +23,12 @@ class Generator {
   private string $dataLayer = 'stromCom';
   private int $initialSpace = 2;
   private bool $withDocs;
+  private ?string $nonce;
 
-  public function __construct(?string $dataLayer = null, bool $withDocs = false) {
+  public function __construct(?string $dataLayer = null, bool $withDocs = false, ?string $nonce = null) {
     $this->dataLayer = $dataLayer ?? $this->dataLayer;
     $this->withDocs = $withDocs;
+    $this->nonce = $nonce;
   }
 
   public function generateSnippet(string $loaderUrl, string $clientKey, string $clientSecret): SnippetCode {
@@ -43,7 +45,7 @@ class Generator {
               ;j.async=true;j.dataset.type='stromcom';j.dataset.l=l;j.dataset.dl=dl;j.dataset.ck=k;j.dataset.cs=s;
               j.src = {$url}+k;f.parentNode.insertBefore(j,f);
               })(window, document, 'script', {$layer}, {$key}, {$secret});
-            JS);
+            JS, $this->nonce);
     } catch (JsonEncodingException $Exception) {
       throw new SnippetGenerationException('Failed to generate snippet code.', 0, $Exception);
     }
@@ -71,7 +73,7 @@ class Generator {
 
       return new SnippetCode(<<<JS
               {$this->dataLayer}.conf({$json});
-            JS);
+            JS, $this->nonce);
     } catch (JsonEncodingException $Exception) {
       throw new ConfGenerationException('Failed to generate conf code.', 0, $Exception);
     }
@@ -83,7 +85,7 @@ class Generator {
 
       return new SnippetCode(<<<JS
               {$this->dataLayer}.initUser({$json});
-            JS);
+            JS, $this->nonce);
     } catch (JsonEncodingException $Exception) {
       throw new UserGenerationException('Failed to generate user code.', 0, $Exception);
     }
@@ -96,7 +98,7 @@ class Generator {
 
       return new SnippetCode(<<<JS
               {$this->dataLayer}.thread(document.querySelector({$selector}), {$json});
-            JS);
+            JS, $this->nonce);
     } catch (JsonEncodingException $Exception) {
       throw new ThreadGenerationException('Failed to generate thread code.', 0, $Exception);
     }
@@ -108,7 +110,7 @@ class Generator {
 
       return new SnippetCode(<<<JS
               {$this->dataLayer}.home(document.querySelector({$selector}));
-            JS);
+            JS, $this->nonce);
     } catch (JsonEncodingException $Exception) {
       throw new HomeGenerationException('Failed to generate home code.', 0, $Exception);
     }

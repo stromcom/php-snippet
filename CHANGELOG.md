@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.4] - 2026-08-07
+### Added
+- `CspPolicy` — builds the Content-Security-Policy directives the host page needs (`script-src`, `connect-src`, `style-src`, `img-src`, `frame-src`) from the environment's loader URL; exposes `getDirectives()`, `getHeaderName()`, `getHeaderValue()` and `getMetaTag()`
+- `SnippetClient::csp()` — policy pre-filled with the client's environment and nonce
+- `nonce` parameter on `SnippetClient`, `SnippetClientFactory::create()` and `SnippetCode` — `getHTML()` renders `<script nonce="…">`, so integrators no longer need `'unsafe-inline'`. The nonce is validated against the base64 alphabet and propagates into `script-src`
+- `CspException` for an invalid nonce
+- CSP section in the README and a runnable `examples/csp.php`
+
 ## [0.3.1] - 2026-04-17
 ### Changed
 - Add theme support to ConfOptions

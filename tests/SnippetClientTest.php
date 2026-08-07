@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Stromcom\Snippet\Environment\CustomEnvironment;
 use Stromcom\Snippet\Environment\Environment;
 use Stromcom\Snippet\Exception\ConfGenerationException;
+use Stromcom\Snippet\Exception\CspException;
 use Stromcom\Snippet\Exception\HomeGenerationException;
 use Stromcom\Snippet\Exception\SnippetGenerationException;
 use Stromcom\Snippet\Exception\ThreadGenerationException;
@@ -21,6 +22,8 @@ use Stromcom\Snippet\SnippetClient;
 use Stromcom\Snippet\SnippetCode;
 
 class SnippetClientTest extends TestCase {
+
+  private const NONCE = 'r4nd0m+No/nce==';
 
   private SnippetClient $client;
 
@@ -90,6 +93,41 @@ class SnippetClientTest extends TestCase {
   public function home_output_contains_expected_tokens(string $expectedToken): void {
     $code = $this->client->home('#notifications')->getCode();
     $this->assertStringContainsString($expectedToken, $code);
+  }
+
+  #[Test]
+  public function nonce_is_rendered_in_every_generated_script_tag(): void {
+    $client   = new SnippetClient('key', 'secret', Environment::PRODUCTION, nonce: self::NONCE);
+    $expected = '<script nonce="' . self::NONCE . '">';
+
+    $this->assertStringStartsWith($expected, $client->snippet()->getHTML());
+    $this->assertStringStartsWith($expected, $client->conf(new ConfOptions())->getHTML());
+    $this->assertStringStartsWith($expected, $client->user(new UserOptions('u1'))->getHTML());
+    $this->assertStringStartsWith($expected, $client->thread('#el', new ThreadOptions('t1'))->getHTML());
+    $this->assertStringStartsWith($expected, $client->home('#el')->getHTML());
+  }
+
+  #[Test]
+  public function nonce_does_not_change_the_raw_code(): void {
+    $client = new SnippetClient('test-key', 'test-secret', Environment::PRODUCTION, nonce: self::NONCE);
+
+    $this->assertSame($this->client->snippet()->getCode(), $client->snippet()->getCode());
+  }
+
+  #[Test]
+  public function invalid_nonce_is_rejected_by_the_constructor(): void {
+    $this->expectException(CspException::class);
+
+    new SnippetClient('key', 'secret', Environment::PRODUCTION, nonce: 'not a nonce');
+  }
+
+  #[Test]
+  public function csp_policy_uses_the_client_environment_and_nonce(): void {
+    $client     = new SnippetClient('key', 'secret', Environment::STAGING, nonce: self::NONCE);
+    $directives = $client->csp()->getDirectives();
+
+    $this->assertSame(['https://cdn.staging.stromcom.cz', "'nonce-" . self::NONCE . "'"], $directives['script-src']);
+    $this->assertSame(['https://app.staging.stromcom.cz'], $directives['frame-src']);
   }
 
   #[Test]

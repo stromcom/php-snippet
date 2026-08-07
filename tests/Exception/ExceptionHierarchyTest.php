@@ -7,6 +7,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Stromcom\Snippet\Exception\CodeHasherException;
 use Stromcom\Snippet\Exception\ConfGenerationException;
+use Stromcom\Snippet\Exception\CspException;
 use Stromcom\Snippet\Exception\EnvironmentException;
 use Stromcom\Snippet\Exception\GenerationException;
 use Stromcom\Snippet\Exception\HomeGenerationException;
@@ -27,6 +28,7 @@ class ExceptionHierarchyTest extends TestCase {
     $this->assertInstanceOf(SnippetException::class, new OptionsException());
     $this->assertInstanceOf(SnippetException::class, new EnvironmentException());
     $this->assertInstanceOf(SnippetException::class, new CodeHasherException());
+    $this->assertInstanceOf(SnippetException::class, new CspException());
   }
 
   #[Test]

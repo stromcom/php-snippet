@@ -5,6 +5,7 @@ namespace Stromcom\Snippet;
 
 use Stromcom\Snippet\Environment\Environment;
 use Stromcom\Snippet\Environment\EnvironmentInterface;
+use Stromcom\Snippet\Exception\CspException;
 use Stromcom\Snippet\Hashing\Base62CodeHasher;
 use Stromcom\Snippet\Hashing\CodeHasherInterface;
 use Stromcom\Snippet\Hashing\HashAlgorithm;
@@ -29,6 +30,9 @@ class SnippetClientFactory {
    * @param EnvironmentInterface $environment    Target environment (default: production)
    * @param string|null          $dataLayer      Custom JS data-layer name (default: "stromCom")
    * @param bool                 $withDocs       Output annotated code with inline JSDoc comments
+   * @param string|null          $nonce          CSP nonce of the page; every generated <script> tag is rendered with it
+   *
+   * @throws CspException when the nonce is not a valid base64 value
    */
   public static function create(
     string $clientKey,
@@ -39,12 +43,13 @@ class SnippetClientFactory {
     EnvironmentInterface $environment = Environment::PRODUCTION,
     ?string $dataLayer = null,
     bool $withDocs = false,
+    ?string $nonce = null,
   ): SnippetClient {
     $codeHasher = $codeHashSecret !== null
         ? self::createHasher($codeHashSecret, $codeHashAlgo, $codeHashBase62)
         : null;
 
-    return new SnippetClient($clientKey, $clientSecret, $environment, $dataLayer, $withDocs, $codeHasher);
+    return new SnippetClient($clientKey, $clientSecret, $environment, $dataLayer, $withDocs, $codeHasher, $nonce);
   }
 
   /**

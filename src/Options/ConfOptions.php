@@ -48,6 +48,9 @@ class ConfOptions extends SnippetOptions {
   #[Docs('Theme name applied to the host page via data-theme on <html>. Available: stromcom-default, stromcom-dark', 'stromcom-dark', true)]
   private ?string $theme = null;
 
+  #[Docs('Callback resolving business-entity detail for the message editor chip hover-card. Receives {type, id}, returns an object (or Promise) with {title, url?, fields: [{label, value}]}', null, true, 'Function|null')]
+  private ?string $entityResolve = null;
+
   /** @param array<string, string|int|float|null>|null $notificationElementStyles */
   public function __construct(
     ?string $notificationRenderer = null,
@@ -63,6 +66,7 @@ class ConfOptions extends SnippetOptions {
     ?string $notificationElementAfterRender = null,
     ?string $homeBeforeRender = null,
     ?string $theme = null,
+    ?string $entityResolve = null,
   ) {
     $this->notificationRenderer             = $notificationRenderer;
     $this->onNotification                   = $onNotification;
@@ -77,6 +81,7 @@ class ConfOptions extends SnippetOptions {
     $this->notificationElementAfterRender   = $notificationElementAfterRender;
     $this->homeBeforeRender                 = $homeBeforeRender;
     $this->theme                            = $theme;
+    $this->entityResolve                    = $entityResolve;
   }
 
   public function getNotificationRenderer(): ?string {
@@ -154,6 +159,14 @@ class ConfOptions extends SnippetOptions {
 
   public function getTheme(): ?string {
     return $this->theme;
+  }
+
+  public function getEntityResolve(): ?string {
+    return $this->entityResolve;
+  }
+
+  public function renderEntityResolve(): ?JsValue {
+    return $this->wrapJsValue($this->entityResolve);
   }
 
   private function wrapJsValue(?string $value): ?JsValue {

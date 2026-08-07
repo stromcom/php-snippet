@@ -251,7 +251,7 @@ $client = new SnippetClient('key', 'secret', codeHasher: new MyCustomHasher());
 ## Methods
 | Method | Description |
 |---|---|
-| `snippet()` | Async loader script. Place once per page. |
+| `snippet(?string $language = null)` | Async loader script. Place once per page. Optional UI language (`cs`, `en`, `sk`…), otherwise auto-detected from the browser. |
 | `conf(ConfOptions)` | SDK configuration (notification renderer, CSS, callbacks…). |
 | `user(UserOptions)` | Identifies the current user. |
 | `thread(string $selector, ThreadOptions)` | Embeds a thread into a DOM element. |
@@ -285,6 +285,13 @@ See the full list of parameters in [`src/Options/ConfOptions.php`](src/Options/C
 | `notificationElementTargetElement` | `?string` | JS expression returning the target DOM element. |
 | `notificationElementPosition` | `?int` | Icon position: 1=top-left, 2=top-right, 3=bottom-right, 4=bottom-left. |
 | `theme` | `?string` | Light/dark mode for the app. Values: `null` (follows browser preference), `stromcom-light`, `stromcom-dark`. |
+| `entityResolve` | `?string` | JS callback resolving business-entity detail (order, ticket…) for the message editor's chip hover-card. Receives `{type, id}`, returns (or resolves to) `{title, url?, fields: [{label, value}]}`. |
+
+### UI language
+Pass a language code to `snippet()` to force the widget UI language (`cs`, `en`, `sk`…). When omitted, the widget detects it from the browser, falling back to English.
+```php
+echo $client->snippet('cs')->getHTML();
+```
 ## Avatar helper
 `AvatarStyle` generates Gravatar URLs without any external dependency:
 ```php

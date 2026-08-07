@@ -59,13 +59,17 @@ class SnippetClient {
    * Generates the async loader snippet that bootstraps the SDK.
    * Place this once on every page where you want the widget to appear.
    *
+   * @param string|null $language UI language (e.g. "cs", "en", "sk"). Null (default) lets the
+   *                              widget detect it from the browser, falling back to English.
+   *
    * @throws SnippetGenerationException
    */
-  public function snippet(): SnippetCode {
+  public function snippet(?string $language = null): SnippetCode {
     return $this->generator->generateSnippet(
       $this->environment->getLoaderUrl(),
       $this->clientKey,
       $this->clientSecret,
+      $language,
     );
   }
 

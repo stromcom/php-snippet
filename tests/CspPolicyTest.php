@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Stromcom\Snippet\CspPolicy;
 use Stromcom\Snippet\Environment\CustomEnvironment;
 use Stromcom\Snippet\Environment\Environment;
+use Stromcom\Snippet\Environment\EnvironmentInterface;
 use Stromcom\Snippet\Exception\CspException;
 use Stromcom\Snippet\Exception\EnvironmentException;
 
@@ -48,22 +49,66 @@ class CspPolicyTest extends TestCase {
   }
 
   #[Test]
-  #[DataProvider('customLoaderOrigins')]
-  public function custom_environment_origins_are_derived_from_the_loader_url(
-    string $loaderUrl,
-    string $expectedCdnOrigin,
-    string $expectedApiOrigin,
-    string $expectedApplicationOrigin,
-  ): void {
-    $directives = (new CspPolicy(new CustomEnvironment($loaderUrl)))->getDirectives();
+  public function custom_environment_origins_are_taken_from_the_environment(): void {
+    $environment = new CustomEnvironment(
+      'http://localhost:8082/loader.js',
+      'http://localhost:8080',
+      'http://app.localhost:8080',
+    );
+    $directives = (new CspPolicy($environment))->getDirectives();
 
-    $this->assertSame([$expectedCdnOrigin], $directives['script-src']);
-    $this->assertSame([$expectedApiOrigin], $directives['connect-src']);
-    $this->assertSame([$expectedApplicationOrigin], $directives['frame-src']);
+    $this->assertSame(['http://localhost:8082'], $directives['script-src']);
+    $this->assertSame(['http://localhost:8080'], $directives['connect-src']);
+    $this->assertSame(['http://app.localhost:8080'], $directives['frame-src']);
   }
 
   #[Test]
-  public function explicit_urls_override_the_derived_origins(): void {
+  public function only_the_origin_part_of_a_url_is_used(): void {
+    $environment = new CustomEnvironment(
+      'https://cdn.example.com/assets/loader.js?v=2',
+      'https://d142vn70ybbwqc.cloudfront.net/api/app/v1/',
+      'https://chat.example.com/embed',
+    );
+    $directives = (new CspPolicy($environment))->getDirectives();
+
+    $this->assertSame(['https://cdn.example.com'], $directives['script-src']);
+    $this->assertSame(['https://d142vn70ybbwqc.cloudfront.net'], $directives['connect-src']);
+    $this->assertSame(['https://chat.example.com'], $directives['frame-src']);
+  }
+
+  #[Test]
+  #[DataProvider('environmentsWithoutApiUrl')]
+  public function missing_api_origin_throws_instead_of_being_guessed(EnvironmentInterface $environment): void {
+    $this->expectException(CspException::class);
+    $this->expectExceptionMessageMatches('~"connect-src"~');
+
+    new CspPolicy($environment);
+  }
+
+  #[Test]
+  public function missing_application_origin_throws_instead_of_being_guessed(): void {
+    $environment = new CustomEnvironment('https://cdn.example.com/loader.js', 'https://example.com');
+
+    $this->expectException(CspException::class);
+    $this->expectExceptionMessageMatches('~"frame-src"~');
+
+    new CspPolicy($environment);
+  }
+
+  #[Test]
+  public function explicit_urls_complete_an_environment_that_does_not_know_them(): void {
+    $directives = (new CspPolicy(
+      self::createLoaderOnlyEnvironment(),
+      apiUrl: 'https://example.com',
+      applicationUrl: 'https://chat.example.com',
+    ))->getDirectives();
+
+    $this->assertSame(['https://example.com'], $directives['connect-src']);
+    $this->assertSame(['https://chat.example.com'], $directives['frame-src']);
+  }
+
+  #[Test]
+  public function explicit_urls_override_the_environment_origins(): void {
     $policy = new CspPolicy(
       Environment::PRODUCTION,
       apiUrl: 'https://api.example.com/api/app/v1/',
@@ -129,31 +174,25 @@ class CspPolicyTest extends TestCase {
   public function loader_url_without_an_origin_is_rejected(string $loaderUrl): void {
     $this->expectException(EnvironmentException::class);
 
-    new CspPolicy(new CustomEnvironment($loaderUrl));
+    new CspPolicy(new CustomEnvironment($loaderUrl, 'https://example.com', 'https://chat.example.com'));
   }
 
-  /** @return array<string, array{0: string, 1: string, 2: string, 3: string}> */
-  public static function customLoaderOrigins(): array {
+  /** @return array<string, array{0: EnvironmentInterface}> */
+  public static function environmentsWithoutApiUrl(): array {
     return [
-      'dedicated domain' => [
-        'https://cdn.my-company.com/loader.js',
-        'https://cdn.my-company.com',
-        'https://www.my-company.com',
-        'https://app.my-company.com',
-      ],
-      'nested zone' => [
-        'https://cdn.testing.example.com/loader.js',
-        'https://cdn.testing.example.com',
-        'https://testing.example.com',
-        'https://app.testing.example.com',
-      ],
-      'single label host keeps the loader origin' => [
-        'http://localhost:8082/loader.js',
-        'http://localhost:8082',
-        'http://localhost:8082',
-        'http://localhost:8082',
-      ],
+      'environment implementing only EnvironmentInterface' => [self::createLoaderOnlyEnvironment()],
+      'custom environment without origins' => [new CustomEnvironment('https://cdn.example.com/loader.js')],
     ];
+  }
+
+  /** An integrator's own implementation, which knows nothing but the loader URL. */
+  private static function createLoaderOnlyEnvironment(): EnvironmentInterface {
+    return new class implements EnvironmentInterface {
+      public function getLoaderUrl(): string {
+        return 'https://cdn.example.com/loader.js';
+      }
+
+    };
   }
 
 }

@@ -2,10 +2,11 @@
 
 ## [0.3.4] - 2026-08-07
 ### Added
-- `CspPolicy` — builds the Content-Security-Policy directives the host page needs (`script-src`, `connect-src`, `style-src`, `img-src`, `frame-src`) from the environment's loader URL; exposes `getDirectives()`, `getHeaderName()`, `getHeaderValue()` and `getMetaTag()`
+- `CspPolicy` — builds the Content-Security-Policy directives the host page needs (`script-src`, `connect-src`, `style-src`, `img-src`, `frame-src`); exposes `getDirectives()`, `getHeaderName()`, `getHeaderValue()` and `getMetaTag()`. Only the CDN origin comes from the loader URL; the API and application origins are taken from the environment or from the `apiUrl` / `applicationUrl` arguments, and an unknown origin throws a `CspException` instead of producing a guessed policy that would silently block the widget
+- `OriginAwareEnvironmentInterface` — extends `EnvironmentInterface` with `getApiUrl()` and `getApplicationUrl()`. Implemented by `Environment` (real values per case) and by `CustomEnvironment`, which accepts both as optional constructor arguments. Existing `EnvironmentInterface` implementations are unaffected
 - `SnippetClient::csp()` — policy pre-filled with the client's environment and nonce
 - `nonce` parameter on `SnippetClient`, `SnippetClientFactory::create()` and `SnippetCode` — `getHTML()` renders `<script nonce="…">`, so integrators no longer need `'unsafe-inline'`. The nonce is validated against the base64 alphabet and propagates into `script-src`
-- `CspException` for an invalid nonce
+- `CspException` for an invalid nonce or an origin that is neither known nor given
 - CSP section in the README and a runnable `examples/csp.php`
 
 ## [0.3.1] - 2026-04-17

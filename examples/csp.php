@@ -4,7 +4,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Stromcom\Snippet\CspPolicy;
+use Stromcom\Snippet\Environment\CustomEnvironment;
 use Stromcom\Snippet\Environment\Environment;
+use Stromcom\Snippet\Exception\CspException;
 use Stromcom\Snippet\SnippetClientFactory;
 
 // A fresh nonce must be generated for every single response.
@@ -54,4 +56,23 @@ echo $client->snippet()->getHTML() . "\n\n";
 
 /** 5. A policy without a client */
 // Useful when the policy is built somewhere else than the snippet (middleware, edge config…).
-echo (new CspPolicy(Environment::STAGING))->getHeaderValue() . "\n";
+echo (new CspPolicy(Environment::STAGING))->getHeaderValue() . "\n\n";
+
+
+/** 6. A custom environment has to state its origins */
+// Only the CDN origin can be read from the loader URL; the API and the application run on
+// separate hosts, so they are never guessed from it.
+$environment = new CustomEnvironment(
+    'https://cdn.example.com/loader.js',
+    'https://example.com',       // API — the origin the widget polls
+    'https://chat.example.com',  // application — the origin of the iframe
+);
+
+echo (new CspPolicy($environment))->getHeaderValue() . "\n\n";
+
+// Without them the policy fails loudly instead of silently blocking the widget at runtime.
+try {
+    new CspPolicy(new CustomEnvironment('https://cdn.example.com/loader.js'));
+} catch (CspException $Exception) {
+    echo $Exception->getMessage() . "\n";
+}

@@ -145,14 +145,23 @@ foreach ($policy->getDirectives() as $directive => $sources) {
     $ownPolicy[$directive] = [...$ownPolicy[$directive] ?? [], ...$sources];
 }
 ```
-All origins are derived from the loader URL, so `Environment::STAGING` and `CustomEnvironment` work too. The derivation expects the standard host layout — `cdn.<zone>` for assets, `app.<zone>` for the application, `<zone>` (or `www.<zone>` for a bare domain) for the API. For a deployment that differs, pass the origins explicitly:
+`Environment::PRODUCTION` and `Environment::STAGING` know all their origins, so nothing else is needed for them. For a `CustomEnvironment` the API and application origins are **not** guessed from the loader URL — they are separate hosts, and a wrong guess would silently produce a policy that blocks the widget. Give them to the environment:
 ```php
-$policy = new CspPolicy(
-    new CustomEnvironment('https://static.example.com/loader.js'),
-    apiUrl:         'https://example.com',
-    applicationUrl: 'https://chat.example.com',
+$environment = new CustomEnvironment(
+    'https://cdn.example.com/loader.js',
+    'https://example.com',       // API — the origin the widget polls
+    'https://chat.example.com',  // application — the origin of the iframe
 );
+
+$policy = new CspPolicy($environment);
 ```
+…or straight to the policy, which also overrides what the environment says:
+```php
+$policy = new CspPolicy($environment, apiUrl: 'https://example.com', applicationUrl: 'https://chat.example.com');
+```
+If neither provides them, `CspPolicy` throws a `CspException` naming the directive it could not build and the argument to pass.
+
+> **Writing your own `EnvironmentInterface`?** `CspPolicy` reads the two origins from `OriginAwareEnvironmentInterface`, which extends `EnvironmentInterface` with `getApiUrl()` and `getApplicationUrl()` (both may return `null` when unknown). Either implement it as well, or pass `apiUrl` / `applicationUrl` to `CspPolicy`. Implementations of plain `EnvironmentInterface` keep working everywhere else — the extra interface only matters for CSP.
 
 ### Nonce for inline scripts
 `getHTML()` emits an inline `<script>` tag. Rather than allowing `'unsafe-inline'`, pass the nonce of the current response — it is set **once** and applied to every tag the client generates:

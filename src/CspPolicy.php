@@ -5,6 +5,7 @@ namespace Stromcom\Snippet;
 
 use Stromcom\Snippet\Environment\Environment;
 use Stromcom\Snippet\Environment\EnvironmentInterface;
+use Stromcom\Snippet\Environment\OriginAwareEnvironmentInterface;
 use Stromcom\Snippet\Exception\CspException;
 use Stromcom\Snippet\Exception\EnvironmentException;
 use Stromcom\Snippet\Internal\NonceValidator;
@@ -13,7 +14,7 @@ use Stromcom\Snippet\Internal\NonceValidator;
  * Content-Security-Policy directives the host page must allow for the widget to work.
  *
  * What the widget touches on the host page:
- *   - loads the loader and the snippet bundle from the CDN origin (`script-src`)
+ *   - loads the loader and the widget bundle from the CDN origin (`script-src`)
  *   - loads the widget stylesheets from the same CDN origin (`style-src`)
  *   - polls the notification API on the site origin (`connect-src`)
  *   - renders inline SVG icons embedded as `data:` URIs (`img-src`)
@@ -27,11 +28,11 @@ use Stromcom\Snippet\Internal\NonceValidator;
  * header($policy->getHeaderName() . ': ' . $policy->getHeaderValue());
  * ```
  *
- * All origins are derived from the loader URL of the given environment, so a
- * {@see \Stromcom\Snippet\Environment\CustomEnvironment} works as well. The derivation
- * assumes the standard STROMCOM host layout — `cdn.<zone>` for static assets, `app.<zone>`
- * for the application, and `<zone>` (or `www.<zone>` for a bare registrable domain) for the
- * API. Pass `$apiUrl` / `$applicationUrl` explicitly for deployments that differ.
+ * The CDN origin comes from the loader URL, which contains it. The API and application
+ * origins are separate hosts and are never guessed — they are read from an
+ * {@see OriginAwareEnvironmentInterface} or passed as `$apiUrl` / `$applicationUrl`.
+ * When neither provides them, a {@see CspException} is thrown rather than a policy that
+ * silently blocks the widget.
  */
 class CspPolicy {
 
@@ -45,10 +46,6 @@ class CspPolicy {
 
   private const SOURCE_DATA_URI = 'data:';
 
-  private const LABEL_CDN         = 'cdn';
-  private const LABEL_APPLICATION = 'app';
-  private const LABEL_CANONICAL   = 'www';
-
   private string $cdnOrigin;
   private string $apiOrigin;
   private string $applicationOrigin;
@@ -57,10 +54,10 @@ class CspPolicy {
   /**
    * @param EnvironmentInterface $environment    Target environment (default: production)
    * @param string|null          $nonce          CSP nonce of the page; when set it is added to `script-src`
-   * @param string|null          $apiUrl         Overrides the derived API origin
-   * @param string|null          $applicationUrl Overrides the derived application (iframe) origin
+   * @param string|null          $apiUrl         API origin; required unless the environment provides it
+   * @param string|null          $applicationUrl Application (iframe) origin; required unless the environment provides it
    *
-   * @throws CspException         when the nonce is not a valid base64 value
+   * @throws CspException         when the nonce is invalid or an origin is neither known nor given
    * @throws EnvironmentException when an URL cannot be reduced to an origin
    */
   public function __construct(
@@ -69,12 +66,23 @@ class CspPolicy {
     ?string $apiUrl = null,
     ?string $applicationUrl = null,
   ) {
-    $loaderUrl = $environment->getLoaderUrl();
+    $this->cdnOrigin = self::toOrigin($environment->getLoaderUrl());
 
-    $this->cdnOrigin         = self::toOrigin($loaderUrl);
-    $this->apiOrigin         = $apiUrl === null ? self::deriveApiOrigin($loaderUrl) : self::toOrigin($apiUrl);
-    $this->applicationOrigin = $applicationUrl === null ? self::deriveApplicationOrigin($loaderUrl) : self::toOrigin($applicationUrl);
-    $this->nonce             = NonceValidator::validate($nonce);
+    $this->apiOrigin = self::toOrigin(self::resolveUrl(
+      $apiUrl ?? self::apiUrlOf($environment),
+      $environment,
+      'apiUrl',
+      self::DIRECTIVE_CONNECT_SRC,
+    ));
+
+    $this->applicationOrigin = self::toOrigin(self::resolveUrl(
+      $applicationUrl ?? self::applicationUrlOf($environment),
+      $environment,
+      'applicationUrl',
+      self::DIRECTIVE_FRAME_SRC,
+    ));
+
+    $this->nonce = NonceValidator::validate($nonce);
   }
 
   /**
@@ -124,73 +132,38 @@ class CspPolicy {
     return $this->nonce;
   }
 
-  /**
-   * The API lives on the site itself — `staging.stromcom.cz` for `cdn.staging.stromcom.cz`.
-   * A bare registrable domain uses its canonical `www` host — `www.stromcom.cz` for `cdn.stromcom.cz`.
-   *
-   * @throws EnvironmentException
-   */
-  private static function deriveApiOrigin(string $loaderUrl): string {
-    $url    = self::parseUrl($loaderUrl);
-    $labels = self::zoneLabels($url['host']);
+  private static function apiUrlOf(EnvironmentInterface $environment): ?string {
+    return $environment instanceof OriginAwareEnvironmentInterface ? $environment->getApiUrl() : null;
+  }
 
-    if (count($labels) < 2) {
-      return self::buildOrigin($url['scheme'], $url['host'], $url['port']);
-    }
-
-    $zone = implode('.', $labels);
-    $host = count($labels) === 2 ? self::LABEL_CANONICAL . '.' . $zone : $zone;
-
-    return self::buildOrigin($url['scheme'], $host, $url['port']);
+  private static function applicationUrlOf(EnvironmentInterface $environment): ?string {
+    return $environment instanceof OriginAwareEnvironmentInterface ? $environment->getApplicationUrl() : null;
   }
 
   /**
-   * The application is embedded from the `app` subdomain of the zone —
-   * `app.stromcom.cz` for `cdn.stromcom.cz`, `app.staging.stromcom.cz` for `cdn.staging.stromcom.cz`.
-   *
-   * @throws EnvironmentException
+   * @throws CspException
    */
-  private static function deriveApplicationOrigin(string $loaderUrl): string {
-    $url    = self::parseUrl($loaderUrl);
-    $labels = self::zoneLabels($url['host']);
-
-    if (count($labels) < 2) {
-      return self::buildOrigin($url['scheme'], $url['host'], $url['port']);
+  private static function resolveUrl(?string $url, EnvironmentInterface $environment, string $parameterName, string $directive): string {
+    if ($url !== null) {
+      return $url;
     }
 
-    return self::buildOrigin($url['scheme'], self::LABEL_APPLICATION . '.' . implode('.', $labels), $url['port']);
-  }
-
-  /**
-   * Host labels of the zone the loader belongs to — the leading `cdn` label is dropped.
-   *
-   * @return list<string>
-   */
-  private static function zoneLabels(string $host): array {
-    $labels = explode('.', $host);
-
-    if (count($labels) > 1 && $labels[0] === self::LABEL_CDN) {
-      array_shift($labels);
-    }
-
-    return $labels;
+    throw new CspException(sprintf(
+      'Cannot build the "%s" directive: environment %s does not provide the URL. '
+      . 'Pass it as the "%s" argument of %s, or make the environment implement %s. '
+      . 'The origin is deliberately not guessed from the loader URL — a wrong guess would silently block the widget.',
+      $directive,
+      get_debug_type($environment),
+      $parameterName,
+      self::class,
+      OriginAwareEnvironmentInterface::class,
+    ));
   }
 
   /**
    * @throws EnvironmentException
    */
   private static function toOrigin(string $url): string {
-    $parsed = self::parseUrl($url);
-
-    return self::buildOrigin($parsed['scheme'], $parsed['host'], $parsed['port']);
-  }
-
-  /**
-   * @return array{scheme: string, host: string, port: int|null}
-   *
-   * @throws EnvironmentException
-   */
-  private static function parseUrl(string $url): array {
     $parsed = parse_url($url);
 
     if ($parsed === false || ($parsed['scheme'] ?? '') === '' || ($parsed['host'] ?? '') === '') {
@@ -200,15 +173,9 @@ class CspPolicy {
       ));
     }
 
-    return [
-      'scheme' => (string) $parsed['scheme'],
-      'host'   => (string) $parsed['host'],
-      'port'   => $parsed['port'] ?? null,
-    ];
-  }
+    $origin = "{$parsed['scheme']}://{$parsed['host']}";
 
-  private static function buildOrigin(string $scheme, string $host, ?int $port): string {
-    return $port === null ? "{$scheme}://{$host}" : "{$scheme}://{$host}:{$port}";
+    return isset($parsed['port']) ? "{$origin}:{$parsed['port']}" : $origin;
   }
 
 }

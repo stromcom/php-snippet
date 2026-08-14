@@ -45,6 +45,9 @@ class ConfOptions extends SnippetOptions {
   #[Docs('Callback invoked after the notification element is rendered', null, true, 'Function|null')]
   private ?string $notificationElementAfterRender = null;
 
+  #[Docs('UI language of the app. Null follows the browser, falling back to English. Available: en, cs, sk', 'cs', true)]
+  private ?string $language = null;
+
   #[Docs('Theme name applied to the host page via data-theme on <html>. Available: stromcom-default, stromcom-dark', 'stromcom-dark', true)]
   private ?string $theme = null;
 
@@ -67,6 +70,9 @@ class ConfOptions extends SnippetOptions {
     ?string $homeBeforeRender = null,
     ?string $theme = null,
     ?string $entityResolve = null,
+    // Appended last on purpose — inserting it next to $theme would shift the
+    // positional arguments of existing callers.
+    ?string $language = null,
   ) {
     $this->notificationRenderer             = $notificationRenderer;
     $this->onNotification                   = $onNotification;
@@ -80,6 +86,7 @@ class ConfOptions extends SnippetOptions {
     $this->notificationElementBeforeRender  = $notificationElementBeforeRender;
     $this->notificationElementAfterRender   = $notificationElementAfterRender;
     $this->homeBeforeRender                 = $homeBeforeRender;
+    $this->language                         = $language;
     $this->theme                            = $theme;
     $this->entityResolve                    = $entityResolve;
   }
@@ -155,6 +162,10 @@ class ConfOptions extends SnippetOptions {
 
   public function renderNotificationElementAfterRender(): ?JsValue {
     return $this->wrapJsValue($this->notificationElementAfterRender);
+  }
+
+  public function getLanguage(): ?string {
+    return $this->language;
   }
 
   public function getTheme(): ?string {

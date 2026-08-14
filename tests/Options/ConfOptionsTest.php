@@ -105,6 +105,20 @@ class ConfOptionsTest extends TestCase {
   }
 
   #[Test]
+  public function language_is_included_when_set(): void {
+    $options = new ConfOptions(language: 'cs');
+    $result  = $options->getOptions();
+
+    $this->assertArrayHasKey('language', $result);
+    $this->assertSame('cs', $result['language']);
+  }
+
+  #[Test]
+  public function language_is_not_included_when_null(): void {
+    $this->assertArrayNotHasKey('language', (new ConfOptions())->getOptions());
+  }
+
+  #[Test]
   public function get_options_with_docs_returns_all_property_schemas(): void {
     $schema = ConfOptions::getOptionsWithDocs();
 

@@ -81,6 +81,12 @@ class SnippetClientTest extends TestCase {
   }
 
   #[Test]
+  public function conf_output_contains_language(): void {
+    $code = $this->client->conf(new ConfOptions(language: 'cs'))->getCode();
+    $this->assertStringContainsString('"language": "cs"', $code);
+  }
+
+  #[Test]
   public function conf_output_with_docs_contains_on_load(): void {
     $code = $this->client->conf(new ConfOptions(), true)->getCode();
     $this->assertStringContainsString('onLoad', $code);

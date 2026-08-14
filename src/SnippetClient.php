@@ -61,6 +61,8 @@ class SnippetClient {
    *
    * @param string|null $language UI language (e.g. "cs", "en", "sk"). Null (default) lets the
    *                              widget detect it from the browser, falling back to English.
+   *                              This is the initial value only — `ConfOptions::$language`
+   *                              overrides it and can be changed later at runtime.
    *
    * @throws SnippetGenerationException
    */

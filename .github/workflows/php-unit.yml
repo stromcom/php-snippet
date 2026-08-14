@@ -9,13 +9,31 @@ on:
 permissions:
   contents: read
 
+# composer.json allows PHP ^8.2 and tuupola/base62 ^2.1, so that whole range is what
+# consumers may resolve to. Three dependency variants cover it:
+#   locked  — what composer.lock pins (the combination developers actually run)
+#   highest — newest allowed, catches upstream releases that break us
+#   lowest  — the bottom of every constraint, the only job proving `^` lower bounds
+#             are real. Runs on the minimum PHP only; older dev tooling on the newest
+#             PHP tests the tooling, not this library.
 jobs:
-  build:
+  test:
+    name: "PHP ${{ matrix.php-version }} / ${{ matrix.dependencies }}"
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     concurrency:
-      group: test-${{ github.event_name }}-${{ github.ref_name }}
+      group: test-${{ github.event_name }}-${{ github.ref_name }}-${{ matrix.php-version }}-${{ matrix.dependencies }}
       cancel-in-progress: true
+
+    strategy:
+      # One broken combination should not hide the state of the others.
+      fail-fast: false
+      matrix:
+        php-version: [ '8.2', '8.3', '8.4', '8.5' ]
+        dependencies: [ locked, highest ]
+        include:
+          - php-version: '8.2'
+            dependencies: lowest
 
     steps:
     - uses: actions/checkout@v5
@@ -23,7 +41,8 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
+        php-version: ${{ matrix.php-version }}
+        coverage: none
 
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
@@ -33,12 +52,27 @@ jobs:
       uses: actions/cache@v5
       with:
         path: vendor
-        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        key: ${{ runner.os }}-php-${{ matrix.php-version }}-${{ matrix.dependencies }}-${{ hashFiles('**/composer.lock') }}
         restore-keys: |
-          ${{ runner.os }}-php-
+          ${{ runner.os }}-php-${{ matrix.php-version }}-${{ matrix.dependencies }}-
 
     - name: Install dependencies
-      run: composer install --prefer-dist --no-progress
+      run: |
+        case "${{ matrix.dependencies }}" in
+          locked)
+            composer install --prefer-dist --no-progress
+            ;;
+          highest)
+            composer update --prefer-dist --no-progress
+            ;;
+          lowest)
+            composer update --prefer-dist --no-progress --prefer-lowest --prefer-stable
+            ;;
+          *)
+            echo "Unknown dependencies variant: ${{ matrix.dependencies }}" >&2
+            exit 1
+            ;;
+        esac
 
     - name: Run test suite
       run: composer run-script test

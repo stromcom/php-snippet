@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+# Deliberately single-version, unlike the test matrix: PHPStan and php-cs-fixer judge the
+# source, not the runtime, so running them on four PHP versions repeats the same verdict.
+# The version pinned here is the project minimum, which is also the one php-cs-fixer wants
+# to run on (it warns when the runtime is newer than composer.json allows for).
 jobs:
   build:
     runs-on: ubuntu-latest

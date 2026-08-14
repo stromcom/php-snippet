@@ -251,7 +251,7 @@ $client = new SnippetClient('key', 'secret', codeHasher: new MyCustomHasher());
 ## Methods
 | Method | Description |
 |---|---|
-| `snippet(?string $language = null)` | Async loader script. Place once per page. Optional initial UI language (any code; unknown falls back to English), otherwise auto-detected from the browser. |
+| `snippet(?string $language = null)` | Async loader script. Place once per page. Optional initial UI language (any code; one without a translation falls back to the browser language, then English). |
 | `conf(ConfOptions)` | SDK configuration (notification renderer, CSS, callbacks…). |
 | `user(UserOptions)` | Identifies the current user. |
 | `thread(string $selector, ThreadOptions)` | Embeds a thread into a DOM element. |
@@ -284,7 +284,7 @@ See the full list of parameters in [`src/Options/ConfOptions.php`](src/Options/C
 | `pageCSSPath` | `?string` | CSS file URL injected into the snippet iframe. |
 | `notificationElementTargetElement` | `?string` | JS expression returning the target DOM element. |
 | `notificationElementPosition` | `?int` | Icon position: 1=top-left, 2=top-right, 3=bottom-right, 4=bottom-left. |
-| `language` | `?string` | UI language of the app. Any language code is accepted; one without a translation falls back to English. `null` follows the browser. |
+| `language` | `?string` | UI language of the app. Any language code is accepted; one without a translation falls back to the browser language, then English. `null` follows the browser. |
 | `theme` | `?string` | Light/dark mode for the app. Values: `null` (follows browser preference), `stromcom-light`, `stromcom-dark`. |
 | `entityResolve` | `?string` | JS callback resolving business-entity detail (order, ticket…) for the message editor's chip hover-card. Receives `{type, id}`, returns (or resolves to) `{title, url?, fields: [{label, value}]}`. |
 

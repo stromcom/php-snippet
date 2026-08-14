@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 ### Changed
-- Documentation of `language` (on `ConfOptions` and `snippet()`) no longer names a fixed set of codes. Any language code is accepted and one without a translation falls back to English, so the list would only go stale as languages are added
+- Documentation of `language` (on `ConfOptions` and `snippet()`) no longer names a fixed set of codes. Any language code is accepted and one without a translation falls back to the browser language, then English, so the list would only go stale as languages are added
 
 ## [0.5.0] - 2026-08-14
 ### Added

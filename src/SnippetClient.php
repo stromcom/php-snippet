@@ -60,8 +60,8 @@ class SnippetClient {
    * Place this once on every page where you want the widget to appear.
    *
    * @param string|null $language UI language (e.g. "cs", "en", "sk"). Any code is accepted;
-   *                              one without a translation falls back to English. Null (default)
-   *                              lets the widget detect it from the browser.
+   *                              one without a translation falls back to the browser language,
+   *                              then English. Null (default) lets the widget detect it from the browser.
    *                              This is the initial value only — `ConfOptions::$language`
    *                              overrides it and can be changed later at runtime.
    *

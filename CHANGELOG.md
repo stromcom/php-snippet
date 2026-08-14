@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+### Changed
+- Documentation of `language` (on `ConfOptions` and `snippet()`) no longer names a fixed set of codes. Any language code is accepted and one without a translation falls back to English, so the list would only go stale as languages are added
+
 ## [0.5.0] - 2026-08-14
 ### Added
 - `language` option on `ConfOptions` — sets the widget UI language through `conf()`, mirroring `theme`. Values: `null` (follows the browser, falling back to English), `en`, `cs`, `sk`. Unlike the `snippet()` parameter it can be changed at runtime; when both are given, the conf value wins

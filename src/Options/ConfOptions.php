@@ -45,7 +45,7 @@ class ConfOptions extends SnippetOptions {
   #[Docs('Callback invoked after the notification element is rendered', null, true, 'Function|null')]
   private ?string $notificationElementAfterRender = null;
 
-  #[Docs('UI language of the app. Null follows the browser, falling back to English. Available: en, cs, sk', 'cs', true)]
+  #[Docs('UI language of the app. Any language code is accepted; one without a translation falls back to English. Null follows the browser.', 'cs', true)]
   private ?string $language = null;
 
   #[Docs('Theme name applied to the host page via data-theme on <html>. Available: stromcom-default, stromcom-dark', 'stromcom-dark', true)]

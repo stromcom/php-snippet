@@ -59,8 +59,9 @@ class SnippetClient {
    * Generates the async loader snippet that bootstraps the SDK.
    * Place this once on every page where you want the widget to appear.
    *
-   * @param string|null $language UI language (e.g. "cs", "en", "sk"). Null (default) lets the
-   *                              widget detect it from the browser, falling back to English.
+   * @param string|null $language UI language (e.g. "cs", "en", "sk"). Any code is accepted;
+   *                              one without a translation falls back to English. Null (default)
+   *                              lets the widget detect it from the browser.
    *                              This is the initial value only — `ConfOptions::$language`
    *                              overrides it and can be changed later at runtime.
    *

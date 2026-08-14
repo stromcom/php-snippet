@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.0] - 2026-08-14
+### Added
+- `language` option on `ConfOptions` — sets the widget UI language through `conf()`, mirroring `theme`. Values: `null` (follows the browser, falling back to English), `en`, `cs`, `sk`. Unlike the `snippet()` parameter it can be changed at runtime; when both are given, the conf value wins
+
 ## [0.4.0] - 2026-08-07
 ### Added
 - `entityResolve` callback option on `ConfOptions` — resolves business-entity detail for the message editor's chip hover-card

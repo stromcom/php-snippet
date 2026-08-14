@@ -284,11 +284,16 @@ See the full list of parameters in [`src/Options/ConfOptions.php`](src/Options/C
 | `pageCSSPath` | `?string` | CSS file URL injected into the snippet iframe. |
 | `notificationElementTargetElement` | `?string` | JS expression returning the target DOM element. |
 | `notificationElementPosition` | `?int` | Icon position: 1=top-left, 2=top-right, 3=bottom-right, 4=bottom-left. |
+| `language` | `?string` | UI language of the app. Values: `null` (follows the browser, falling back to English), `en`, `cs`, `sk`. |
 | `theme` | `?string` | Light/dark mode for the app. Values: `null` (follows browser preference), `stromcom-light`, `stromcom-dark`. |
 | `entityResolve` | `?string` | JS callback resolving business-entity detail (order, ticket…) for the message editor's chip hover-card. Receives `{type, id}`, returns (or resolves to) `{title, url?, fields: [{label, value}]}`. |
 
 ### UI language
-Pass a language code to `snippet()` to force the widget UI language (`cs`, `en`, `sk`…). When omitted, the widget detects it from the browser, falling back to English.
+Set the language on `ConfOptions`, the same way as the theme. When omitted, the widget detects it from the browser, falling back to English.
+```php
+echo $client->conf(new ConfOptions(language: 'cs'))->getHTML();
+```
+`snippet()` also takes a language code, which sets the initial value before `conf()` runs. Use it when the language is known at page render and you want the widget to boot into it without waiting for `conf()`; `ConfOptions::$language` wins whenever both are given.
 ```php
 echo $client->snippet('cs')->getHTML();
 ```

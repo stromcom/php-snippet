@@ -77,7 +77,7 @@ class ConfOptionsTest extends TestCase {
     // notificationRenderer has showNullInDocs=true → included even when null
     $this->assertArrayHasKey('notificationRenderer', $result);
     $this->assertNull($result['notificationRenderer']);
-    $this->assertArrayHasKey('pageCSSPath', $result);
+    $this->assertArrayHasKey('appCSSPath', $result);
   }
 
   #[Test]
@@ -119,11 +119,41 @@ class ConfOptionsTest extends TestCase {
   }
 
   #[Test]
+  public function app_css_path_accepts_a_single_url(): void {
+    $options = new ConfOptions(appCSSPath: 'https://www.example.com/app.css');
+
+    $this->assertSame('https://www.example.com/app.css', $options->getOptions()['appCSSPath']);
+  }
+
+  #[Test]
+  public function app_css_path_accepts_a_list_of_urls(): void {
+    $paths   = ['https://www.example.com/a.css', 'https://www.example.com/b.css'];
+    $options = new ConfOptions(appCSSPath: $paths);
+
+    $this->assertSame($paths, $options->getOptions()['appCSSPath']);
+  }
+
+  #[Test]
+  public function app_frame_css_path_is_included_when_set(): void {
+    $options = new ConfOptions(appFrameCSSPath: 'https://www.example.com/frame.css');
+
+    $this->assertSame('https://www.example.com/frame.css', $options->getOptions()['appFrameCSSPath']);
+  }
+
+  #[Test]
+  public function css_paths_are_not_included_when_not_set(): void {
+    $result = (new ConfOptions())->getOptions();
+
+    $this->assertArrayNotHasKey('appCSSPath', $result);
+    $this->assertArrayNotHasKey('appFrameCSSPath', $result);
+  }
+
+  #[Test]
   public function get_options_with_docs_returns_all_property_schemas(): void {
     $schema = ConfOptions::getOptionsWithDocs();
 
     $this->assertArrayHasKey('notificationRenderer', $schema);
-    $this->assertArrayHasKey('pageCSSPath', $schema);
+    $this->assertArrayHasKey('appCSSPath', $schema);
     $this->assertArrayHasKey('notificationElementPosition', $schema);
     $this->assertFalse($schema['notificationRenderer']['required']);
   }

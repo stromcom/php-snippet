@@ -14,8 +14,13 @@ class ConfOptions extends SnippetOptions {
   #[Docs('Callback fired when a new message count changes', null, true, 'Function|null')]
   private ?string $onNotification = null;
 
-  #[Docs('CSS file URL injected into the snippet iframe when loading the app', 'https://www.example.com/custom.css', true)]
-  private ?string $pageCSSPath = null;
+  /** @var string|array<int, string>|null */
+  #[Docs('CSS file URL (or a list of them) loaded into the widget frame — the shadow root holding the container, the backdrop and the iframe', 'https://www.example.com/frame.css', true, 'String|String[]|null')]
+  private null|string|array $appFrameCSSPath = null;
+
+  /** @var string|array<int, string>|null */
+  #[Docs('CSS file URL (or a list of them) loaded inside the app itself, on top of the CSS from the project settings. Requires a plan that allows appearance customization.', 'https://www.example.com/app.css', true, 'String|String[]|null')]
+  private null|string|array $appCSSPath = null;
 
   #[Docs('Target element for the notification icon', null, true, 'Function|Promise|HTMLElement')]
   private ?string $notificationElementTargetElement = null;
@@ -54,11 +59,14 @@ class ConfOptions extends SnippetOptions {
   #[Docs('Callback resolving business-entity detail for the message editor chip hover-card. Receives {type, id}, returns an object (or Promise) with {title, url?, fields: [{label, value}]}', null, true, 'Function|null')]
   private ?string $entityResolve = null;
 
-  /** @param array<string, string|int|float|null>|null $notificationElementStyles */
+  /**
+   * @param array<string, string|int|float|null>|null $notificationElementStyles
+   * @param string|array<int, string>|null            $appFrameCSSPath
+   * @param string|array<int, string>|null            $appCSSPath
+   */
   public function __construct(
     ?string $notificationRenderer = null,
     ?string $onNotification = null,
-    ?string $pageCSSPath = null,
     ?string $notificationElementTargetElement = null,
     ?bool   $notificationElementShowAlways = null,
     ?int    $notificationElementPosition = null,
@@ -73,10 +81,11 @@ class ConfOptions extends SnippetOptions {
     // Appended last on purpose — inserting it next to $theme would shift the
     // positional arguments of existing callers.
     ?string $language = null,
+    null|string|array $appFrameCSSPath = null,
+    null|string|array $appCSSPath = null,
   ) {
     $this->notificationRenderer             = $notificationRenderer;
     $this->onNotification                   = $onNotification;
-    $this->pageCSSPath                      = $pageCSSPath;
     $this->notificationElementTargetElement = $notificationElementTargetElement;
     $this->notificationElementShowAlways    = $notificationElementShowAlways;
     $this->notificationElementPosition      = $notificationElementPosition;
@@ -89,6 +98,8 @@ class ConfOptions extends SnippetOptions {
     $this->language                         = $language;
     $this->theme                            = $theme;
     $this->entityResolve                    = $entityResolve;
+    $this->appFrameCSSPath                  = $appFrameCSSPath;
+    $this->appCSSPath                       = $appCSSPath;
   }
 
   public function getNotificationRenderer(): ?string {
@@ -107,8 +118,14 @@ class ConfOptions extends SnippetOptions {
     return $this->wrapJsValue($this->onNotification);
   }
 
-  public function getPageCSSPath(): ?string {
-    return $this->pageCSSPath;
+  /** @return string|array<int, string>|null */
+  public function getAppFrameCSSPath(): null|string|array {
+    return $this->appFrameCSSPath;
+  }
+
+  /** @return string|array<int, string>|null */
+  public function getAppCSSPath(): null|string|array {
+    return $this->appCSSPath;
   }
 
   public function getNotificationElementTargetElement(): ?string {

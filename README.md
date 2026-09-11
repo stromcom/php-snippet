@@ -281,12 +281,34 @@ See the full list of parameters in [`src/Options/ConfOptions.php`](src/Options/C
 |---|---|---|
 | `notificationRenderer` | `?string` | JS function for custom notification rendering. |
 | `onNotification` | `?string` | JS callback for new message count changes. |
-| `pageCSSPath` | `?string` | CSS file URL injected into the snippet iframe. |
+| `appFrameCSSPath` | `string\|string[]\|null` | CSS for the widget frame — the shadow root holding the container, the backdrop and the iframe. |
+| `appCSSPath` | `string\|string[]\|null` | CSS for the app itself (inside the iframe), on top of the CSS from the project settings. |
 | `notificationElementTargetElement` | `?string` | JS expression returning the target DOM element. |
 | `notificationElementPosition` | `?int` | Icon position: 1=top-left, 2=top-right, 3=bottom-right, 4=bottom-left. |
 | `language` | `?string` | UI language of the app. Any language code is accepted; one without a translation falls back to the browser language, then English. `null` follows the browser. |
 | `theme` | `?string` | Light/dark mode for the app. Values: `null` (follows browser preference), `stromcom-light`, `stromcom-dark`. |
 | `entityResolve` | `?string` | JS callback resolving business-entity detail (order, ticket…) for the message editor's chip hover-card. Receives `{type, id}`, returns (or resolves to) `{title, url?, fields: [{label, value}]}`. |
+
+### Custom CSS
+The widget is rendered in a shadow root and the app itself lives in an iframe, so neither
+is reachable from your page stylesheet. Two options open them up:
+
+```php
+echo $client->conf(new ConfOptions(
+    appFrameCSSPath: 'https://www.example.com/frame.css',
+    appCSSPath: ['https://www.example.com/app.css', 'https://www.example.com/brand.css'],
+))->getHTML();
+```
+
+| Option | Where it lands | Covers |
+|---|---|---|
+| `appFrameCSSPath` | shadow root of the mount point | container, backdrop, the iframe element |
+| `appCSSPath` | `<head>` of the app document | the whole UI inside the widget |
+
+Both accept a single URL or a list, and both are loaded **after** the widget's own
+stylesheet, so your rules win. `appCSSPath` is applied on top of the `customCSSPath`
+from the project settings, and — like it — only on a plan that allows appearance
+customization; without it the app ignores both.
 
 ### UI language
 Set the language on `ConfOptions`, the same way as the theme. Any language code is accepted — the widget uses English for a language it has no translation for, so passing one is never an error. When omitted, the language is detected from the browser.

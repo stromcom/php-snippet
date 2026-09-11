@@ -171,7 +171,7 @@ class Generator {
   private function jsonEncode(mixed $data): string {
     $jsValues = $this->extractJsValues($data);
 
-    $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_FORCE_OBJECT | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    $json = json_encode($this->encodable($data), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
     if ($json === false) {
       throw new JsonEncodingException('JSON encoding failed: ' . json_last_error_msg());
@@ -184,6 +184,24 @@ class Generator {
     }
 
     return $json;
+  }
+
+  /**
+   * An empty array has to stay an object in the output (`conf({})`), but a list has
+   * to stay an array: values like `appCSSPath: ['a.css', 'b.css']` or thread
+   * `attributes` are rejected by the snippet when they arrive as `{"0": …}`, which is
+   * what JSON_FORCE_OBJECT made of them.
+   */
+  private function encodable(mixed $data): mixed {
+    if (!is_array($data)) {
+      return $data;
+    }
+
+    if ($data === []) {
+      return new \stdClass();
+    }
+
+    return array_map(fn(mixed $item): mixed => $this->encodable($item), $data);
   }
 
   /**

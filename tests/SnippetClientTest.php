@@ -87,6 +87,27 @@ class SnippetClientTest extends TestCase {
   }
 
   #[Test]
+  public function conf_output_keeps_empty_options_as_an_object(): void {
+    $this->assertStringContainsString('stromCom.conf({', $this->client->conf(new ConfOptions())->getCode());
+  }
+
+  #[Test]
+  public function conf_output_renders_a_list_of_css_paths_as_an_array(): void {
+    $code = $this->client->conf(new ConfOptions(appCSSPath: ['https://example.com/a.css', 'https://example.com/b.css']))->getCode();
+
+    $this->assertStringContainsString('"appCSSPath": [', $code);
+    $this->assertStringContainsString('"https://example.com/a.css"', $code);
+    $this->assertStringNotContainsString('"0":', $code);
+  }
+
+  #[Test]
+  public function conf_output_renders_a_single_css_path_as_a_string(): void {
+    $code = $this->client->conf(new ConfOptions(appFrameCSSPath: 'https://example.com/frame.css'))->getCode();
+
+    $this->assertStringContainsString('"appFrameCSSPath": "https://example.com/frame.css"', $code);
+  }
+
+  #[Test]
   public function conf_output_with_docs_contains_on_load(): void {
     $code = $this->client->conf(new ConfOptions(), true)->getCode();
     $this->assertStringContainsString('onLoad', $code);
@@ -215,7 +236,7 @@ class SnippetClientTest extends TestCase {
       ],
       'conf' => [
         static function (self $test): void {
-          $test->client->conf(new ConfOptions(pageCSSPath: "\x80\x81invalid"));
+          $test->client->conf(new ConfOptions(theme: "\x80\x81invalid"));
         },
         ConfGenerationException::class,
       ],

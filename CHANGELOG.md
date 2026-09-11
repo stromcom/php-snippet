@@ -1,6 +1,15 @@
 # Changelog
 
-## [Unreleased]
+## [0.6.0] - 2026-09-11
+### Added
+- `appCSSPath` and `appFrameCSSPath` options on `ConfOptions` — custom CSS for the widget, each accepting a single URL or a list of them. `appFrameCSSPath` lands in the shadow root of the mount point (container, backdrop, iframe element), `appCSSPath` in the document of the app itself, on top of the `customCSSPath` from the project settings. Both are loaded after the widget's own stylesheet, so the integrator's rules win; `appCSSPath` needs a plan that allows appearance customization
+
+### Removed
+- **BC break** — `pageCSSPath` on `ConfOptions`. The widget read the key but never did anything with it, and CSS for the host page is something the integrator puts in their own document anyway. Callers passing `ConfOptions` arguments **positionally** must drop the third argument; named arguments are unaffected apart from removing the key
+
+### Fixed
+- List values are no longer serialized as JSON objects. `JSON_FORCE_OBJECT` turned `['a.css', 'b.css']` into `{"0": "a.css", "1": "b.css"}`, which the widget rejects — this also affected thread `attributes`. An empty option set still renders as `conf({})`
+
 ### Changed
 - Documentation of `language` (on `ConfOptions` and `snippet()`) no longer names a fixed set of codes. Any language code is accepted and one without a translation falls back to the browser language, then English, so the list would only go stale as languages are added
 

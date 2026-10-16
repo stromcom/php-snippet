@@ -8,6 +8,7 @@ use Stromcom\Snippet\Environment\EnvironmentInterface;
 use Stromcom\Snippet\Exception\ConfGenerationException;
 use Stromcom\Snippet\Exception\CspException;
 use Stromcom\Snippet\Exception\HomeGenerationException;
+use Stromcom\Snippet\Exception\OptionsException;
 use Stromcom\Snippet\Exception\SnippetGenerationException;
 use Stromcom\Snippet\Exception\ThreadGenerationException;
 use Stromcom\Snippet\Exception\UserGenerationException;
@@ -32,7 +33,8 @@ class SnippetClient {
    * @param CodeHasherInterface|null $codeHasher   When set, `code` in UserOptions/ThreadOptions is automatically hashed via the given hasher
    * @param string|null              $nonce        CSP nonce of the page; every generated <script> tag is rendered with it
    *
-   * @throws CspException when the nonce is not a valid base64 value
+   * @throws CspException     when the nonce is not a valid base64 value
+   * @throws OptionsException when the data-layer name is not a plain JavaScript identifier
    */
   public function __construct(
     private string $clientKey,

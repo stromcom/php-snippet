@@ -7,7 +7,7 @@ use Stromcom\Snippet\Internal\Attribute\Docs;
 
 class ThreadOptions extends SnippetOptions {
 
-  #[Docs('Unique thread code. Cannot be changed later. Max length 100. Allowed characters: [a-zA-Z0-9-_]', 'dc127f5d2483352fd20eaddb38feb6d2')]
+  #[Docs('Unique thread code. Cannot be changed later. Max length 100. Allowed characters: [a-zA-Z0-9_-]', 'dc127f5d2483352fd20eaddb38feb6d2')]
   private string $code;
 
   #[Docs('Thread display name', 'Invoice #12345')]

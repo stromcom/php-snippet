@@ -7,10 +7,10 @@ use Stromcom\Snippet\Internal\Attribute\Docs;
 
 class UserOptions extends SnippetOptions {
 
-  #[Docs('Unique user code. Cannot be changed later. Max length 100. Allowed characters: [a-zA-Z0-9-_]', '35ba77a78f4465679c473747e39c43c9')]
+  #[Docs('Unique user code. Cannot be changed later. Max length 100. Allowed characters: [a-zA-Z0-9._@+-]', '35ba77a78f4465679c473747e39c43c9')]
   private string $code;
 
-  #[Docs('User display name', 'John Doe')]
+  #[Docs('User display name. The widget does not render until the user has both a code and a name.', 'John Doe')]
   private ?string $name = null;
 
   #[Docs('Email address used for notifications', 'john.doe@example.com')]

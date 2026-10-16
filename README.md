@@ -1,6 +1,6 @@
 # stromcom/snippet-php
 PHP library for generating [STROMCOM](https://www.stromcom.cz) integration snippets.
-Generates the JavaScript code you embed on your page to load the STROMCOM chat widget, identify users, and attach threads. No runtime dependencies — pure PHP 8.2+.
+Generates the JavaScript code you embed on your page to load the STROMCOM chat widget, identify users, and attach threads. Requires PHP 8.2+; the only runtime dependency is [`tuupola/base62`](https://github.com/tuupola/base62) (used for base-62 encoding of hashed codes).
 ## Requirements
 - PHP **8.2+**
 ## Installation
@@ -259,19 +259,24 @@ $client = new SnippetClient('key', 'secret', codeHasher: new MyCustomHasher());
 All methods return a `SnippetCode` object with:
 - `->getCode()` — raw JavaScript string
 - `->getHTML()` — wrapped in `<script>…</script>` (with a `nonce` attribute when a nonce is configured)
+
+### Escaping and trusted input
+Every option value (user name, email, avatar URL, code, thread name/URL/code/attributes, CSS paths, the selector passed to `thread()`/`home()`, client key/secret, loader URL) is JSON-encoded with `JSON_HEX_TAG | JSON_HEX_AMP`: `<`, `>` and `&` are written as `\u003C`, `\u003E` and `\u0026`, so no value can close the inline `<script>` (`</script>`) or open an HTML comment (`<!--`). The browser decodes the values back unchanged. The data-layer name is written as a bare identifier and must match `[A-Za-z_$][A-Za-z0-9_$]*`, otherwise the constructor throws an `OptionsException`.
+
+**The exception are JS callbacks** — the `ConfOptions` parameters typed `Function`/`HTMLElement` (`notificationRenderer`, `onNotification`, `notificationElementTargetElement`, `notificationElementBeforeRender`, `notificationElementAfterRender`, `homeBeforeRender`, `entityResolve`). They are **inserted verbatim** as JavaScript code. Pass only trusted code written by you, **never user input**.
 ## Options reference
 ### `UserOptions`
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `code` | `string` | ✅ | Unique user identifier (hash of your internal user ID + salt). Max 100 chars, `[a-zA-Z0-9-_]`. |
-| `name` | `?string` | | Display name. |
+| `code` | `string` | ✅ | Unique user identifier (hash of your internal user ID + salt). Max 100 chars, `[a-zA-Z0-9._@+-]`. |
+| `name` | `?string` | ✅* | Display name. *The widget does not render until `initUser` has both `code` and `name`, so the name is effectively required. |
 | `emailAddress` | `?string` | | Used for email notifications. |
 | `readOnly` | `?bool` | | When `true`, the user can read but not send messages. |
 | `avatarURL` | `?string` | | Full URL to the user's avatar image. See `AvatarStyle` helper below. |
 ### `ThreadOptions`
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `code` | `string` | ✅ | Unique thread identifier. Cannot be changed later. Max 100 chars, `[a-zA-Z0-9-_]`. |
+| `code` | `string` | ✅ | Unique thread identifier. Cannot be changed later. Max 100 chars, `[a-zA-Z0-9_-]`. |
 | `name` | `?string` | | Display name shown in the thread header. |
 | `url` | `?string` | | Canonical URL of the page. A link appears in the thread header. |
 | `userHint` | `bool` | | Enable @mention suggestions. Default: `true`. |
@@ -286,8 +291,10 @@ See the full list of parameters in [`src/Options/ConfOptions.php`](src/Options/C
 | `notificationElementTargetElement` | `?string` | JS expression returning the target DOM element. |
 | `notificationElementPosition` | `?int` | Icon position: 1=top-left, 2=top-right, 3=bottom-right, 4=bottom-left. |
 | `language` | `?string` | UI language of the app. Any language code is accepted; one without a translation falls back to the browser language, then English. `null` follows the browser. |
-| `theme` | `?string` | Light/dark mode for the app. Values: `null` (follows browser preference), `stromcom-light`, `stromcom-dark`. |
-| `entityResolve` | `?string` | JS callback resolving business-entity detail (order, ticket…) for the message editor's chip hover-card. Receives `{type, id}`, returns (or resolves to) `{title, url?, fields: [{label, value}]}`. |
+| `theme` | `?string` | Light/dark mode for the app. Values: `null` (follows browser preference), `stromcom-default`, `stromcom-dark`. |
+| `entityResolve` | `?string` | JS callback resolving business-entity detail (order, ticket…) for the message editor's chip hover-card. Receives `{type, id, groups, url}`, returns (or resolves to) `{title, url?, fields: [{label, value}]}`. |
+
+JS callbacks passed as strings are wrapped in a `Promise` that resolves on `DOMContentLoaded`, so they can reference elements further down the page. A `conf()` script injected **after** `DOMContentLoaded` (AJAX, Turbo, client-side navigation) never resolves them — print `conf()` in the initial HTML of the page.
 
 ### Custom CSS
 The widget is rendered in a shadow root and the app itself lives in an iframe, so neither
@@ -342,7 +349,7 @@ echo $client->user(new UserOptions('u1'))->getHTML();
 <script>
   stromCom.initUser({
     /**
-     * Unique user code. Cannot be changed later. Max length 100. Allowed characters: [a-zA-Z0-9-_] (required)
+     * Unique user code. Cannot be changed later. Max length 100. Allowed characters: [a-zA-Z0-9._@+-] (required)
      */
     "code": "u1"
   });

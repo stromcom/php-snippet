@@ -6,6 +6,7 @@ namespace Stromcom\Snippet;
 use Stromcom\Snippet\Environment\Environment;
 use Stromcom\Snippet\Environment\EnvironmentInterface;
 use Stromcom\Snippet\Exception\CspException;
+use Stromcom\Snippet\Exception\OptionsException;
 use Stromcom\Snippet\Hashing\Base62CodeHasher;
 use Stromcom\Snippet\Hashing\CodeHasherInterface;
 use Stromcom\Snippet\Hashing\HashAlgorithm;
@@ -32,7 +33,8 @@ class SnippetClientFactory {
    * @param bool                 $withDocs       Output annotated code with inline JSDoc comments
    * @param string|null          $nonce          CSP nonce of the page; every generated <script> tag is rendered with it
    *
-   * @throws CspException when the nonce is not a valid base64 value
+   * @throws CspException     when the nonce is not a valid base64 value
+   * @throws OptionsException when the data-layer name is not a plain JavaScript identifier
    */
   public static function create(
     string $clientKey,

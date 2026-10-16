@@ -6,6 +6,7 @@ namespace Stromcom\Snippet\Internal;
 use Stromcom\Snippet\Exception\ConfGenerationException;
 use Stromcom\Snippet\Exception\HomeGenerationException;
 use Stromcom\Snippet\Exception\JsonEncodingException;
+use Stromcom\Snippet\Exception\OptionsException;
 use Stromcom\Snippet\Exception\SnippetGenerationException;
 use Stromcom\Snippet\Exception\ThreadGenerationException;
 use Stromcom\Snippet\Exception\UserGenerationException;
@@ -20,12 +21,34 @@ use Stromcom\Snippet\SnippetCode;
  */
 class Generator {
 
+  /**
+   * The JSON is embedded in an inline <script>, so `<`, `>` and `&` are escaped as
+   * \u003C, \u003E and \u0026: no value can close the script tag (`</script>`) or
+   * open an HTML comment (`<!--`). The decoded values stay unchanged.
+   */
+  private const JSON_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP;
+
+  /**
+   * The data-layer name is written into the code as a bare identifier.
+   */
+  private const DATA_LAYER_PATTERN = '~^[A-Za-z_$][A-Za-z0-9_$]*$~';
+
   private string $dataLayer = 'stromCom';
   private int $initialSpace = 2;
   private bool $withDocs;
   private ?string $nonce;
 
+  /**
+   * @throws OptionsException when the data-layer name is not a plain JavaScript identifier
+   */
   public function __construct(?string $dataLayer = null, bool $withDocs = false, ?string $nonce = null) {
+    if ($dataLayer !== null && preg_match(self::DATA_LAYER_PATTERN, $dataLayer) !== 1) {
+      throw new OptionsException(sprintf(
+        'Invalid data-layer name "%s". It must be a plain JavaScript identifier matching [A-Za-z_$][A-Za-z0-9_$]*.',
+        $dataLayer,
+      ));
+    }
+
     $this->dataLayer = $dataLayer ?? $this->dataLayer;
     $this->withDocs = $withDocs;
     $this->nonce = $nonce;
@@ -146,14 +169,14 @@ class Generator {
       $type     = $meta['type'] ?? null;
 
       $value         = $values[$field] ?? $meta['default'] ?? null;
-      $encodedValue  = json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+      $encodedValue  = json_encode($value, self::JSON_FLAGS);
       $encodedValue  = $encodedValue === false ? "''" : $encodedValue;
       $encodedValue  = $this->replaceJsPlaceholders($encodedValue, $jsValues);
 
       $output .= "{$spaceDocs}/**\n{$spaceDocs} * {$docs} ({$required})\n";
 
       if ($meta['example'] !== null && is_null($values[$field] ?? null)) {
-        $exampleEncoded = json_encode($meta['example'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $exampleEncoded = json_encode($meta['example'], self::JSON_FLAGS);
         $output .= "{$spaceDocs} * Example: {$exampleEncoded}\n";
       }
 
@@ -171,7 +194,7 @@ class Generator {
   private function jsonEncode(mixed $data): string {
     $jsValues = $this->extractJsValues($data);
 
-    $json = json_encode($this->encodable($data), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    $json = json_encode($this->encodable($data), self::JSON_FLAGS | JSON_PRETTY_PRINT);
 
     if ($json === false) {
       throw new JsonEncodingException('JSON encoding failed: ' . json_last_error_msg());

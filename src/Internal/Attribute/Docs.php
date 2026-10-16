@@ -44,7 +44,7 @@ class Docs {
     if (is_array($this->exampleValue)) {
       return json_encode(
         $this->exampleValue,
-        JSON_UNESCAPED_SLASHES | JSON_FORCE_OBJECT | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE,
+        JSON_UNESCAPED_SLASHES | JSON_FORCE_OBJECT | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP,
       );
     }
 

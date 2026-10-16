@@ -56,7 +56,7 @@ class ConfOptions extends SnippetOptions {
   #[Docs('Theme name applied to the host page via data-theme on <html>. Available: stromcom-default, stromcom-dark', 'stromcom-dark', true)]
   private ?string $theme = null;
 
-  #[Docs('Callback resolving business-entity detail for the message editor chip hover-card. Receives {type, id}, returns an object (or Promise) with {title, url?, fields: [{label, value}]}', null, true, 'Function|null')]
+  #[Docs('Callback resolving business-entity detail for the message editor chip hover-card. Receives {type, id, groups, url}, returns an object (or Promise) with {title, url?, fields: [{label, value}]}', null, true, 'Function|null')]
   private ?string $entityResolve = null;
 
   /**

@@ -49,6 +49,18 @@ class ConfOptionsTest extends TestCase {
   }
 
   #[Test]
+  public function on_load_string_is_wrapped_in_js_value(): void {
+    $result = (new ConfOptions(onLoad: 'function() { stromCom.toggleHome(); }'))->getOptions();
+
+    $this->assertInstanceOf(JsValue::class, $result['onLoad']);
+  }
+
+  #[Test]
+  public function on_load_null_is_left_out_of_docs(): void {
+    $this->assertArrayNotHasKey('onLoad', (new ConfOptions())->getOptions(true));
+  }
+
+  #[Test]
   public function on_notification_null_renders_as_null(): void {
     $options = new ConfOptions();
     $this->assertNull($options->renderOnNotification());

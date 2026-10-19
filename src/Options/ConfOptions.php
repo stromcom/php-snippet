@@ -41,7 +41,7 @@ class ConfOptions extends SnippetOptions {
   #[Docs('Disable shadow-root for notifications. When enabled, no default CSS is injected.', true, true, 'boolean')]
   private bool $notificationElementNoShadowRoot = false;
 
-  #[Docs('Callback invoked before the notification center opens (on notification icon click)', null, true, 'Function|null')]
+  #[Docs('Callback invoked before the notification center opens for the first time (notification icon click or stromCom.openHome() / toggleHome())', null, true, 'Function|null')]
   private ?string $homeBeforeRender = null;
 
   #[Docs('Callback invoked before the notification element is rendered', null, true, 'Function|null')]
@@ -58,6 +58,9 @@ class ConfOptions extends SnippetOptions {
 
   #[Docs('Callback resolving business-entity detail for the message editor chip hover-card. Receives {type, id, groups, url}, returns an object (or Promise) with {title, url?, fields: [{label, value}]}', null, true, 'Function|null')]
   private ?string $entityResolve = null;
+
+  #[Docs('Callback invoked once the widget is running (user set, apps rendered); from then on stromCom.openHome(), closeHome() and toggleHome() work. Receives the widget API.', null, false, 'Function|null')]
+  private ?string $onLoad = null;
 
   /**
    * @param array<string, string|int|float|null>|null $notificationElementStyles
@@ -83,6 +86,7 @@ class ConfOptions extends SnippetOptions {
     ?string $language = null,
     null|string|array $appFrameCSSPath = null,
     null|string|array $appCSSPath = null,
+    ?string $onLoad = null,
   ) {
     $this->notificationRenderer             = $notificationRenderer;
     $this->onNotification                   = $onNotification;
@@ -100,6 +104,7 @@ class ConfOptions extends SnippetOptions {
     $this->entityResolve                    = $entityResolve;
     $this->appFrameCSSPath                  = $appFrameCSSPath;
     $this->appCSSPath                       = $appCSSPath;
+    $this->onLoad                           = $onLoad;
   }
 
   public function getNotificationRenderer(): ?string {
@@ -195,6 +200,14 @@ class ConfOptions extends SnippetOptions {
 
   public function renderEntityResolve(): ?JsValue {
     return $this->wrapJsValue($this->entityResolve);
+  }
+
+  public function getOnLoad(): ?string {
+    return $this->onLoad;
+  }
+
+  public function renderOnLoad(): ?JsValue {
+    return $this->wrapJsValue($this->onLoad);
   }
 
   private function wrapJsValue(?string $value): ?JsValue {

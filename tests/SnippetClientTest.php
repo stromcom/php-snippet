@@ -114,6 +114,14 @@ class SnippetClientTest extends TestCase {
   }
 
   #[Test]
+  public function conf_output_with_docs_uses_on_load_given_by_caller(): void {
+    $code = $this->client->conf(new ConfOptions(onLoad: 'function() { window.widgetReady = true; }'), true)->getCode();
+
+    $this->assertSame(1, substr_count($code, 'onLoad'));
+    $this->assertStringContainsString('window.widgetReady = true;', $code);
+  }
+
+  #[Test]
   #[DataProvider('userOutputTokens')]
   public function user_output_contains_expected_tokens(string $expectedToken): void {
     $code = $this->client->user(new UserOptions('abc123'))->getCode();

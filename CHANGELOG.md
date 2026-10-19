@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+### Added
+- `onLoad` option on `ConfOptions` — JS callback invoked once the widget is running. Until now it existed only as a placeholder in docs mode; in docs mode the placeholder is left out when `onLoad` is given. Appended as the last constructor parameter, so positional callers are unaffected
+- Docs: opening the notification center from your own element with `stromCom.openHome()`, `closeHome()` and `toggleHome()`
+
 ## 0.6.1 - 2026-10-16
 ### Security
 - Generated `<script>` code could be broken out of: JSON was encoded without `JSON_HEX_TAG`, so a value such as `new UserOptions('u', name: '</script><b>x')` put a literal `</script>` into the inline script. All JSON in the output (option values, the `thread()`/`home()` selector, client key/secret, data-layer name, loader URL) is now encoded with `JSON_HEX_TAG | JSON_HEX_AMP`; `<`, `>` and `&` appear as `\u003C`, `\u003E`, `\u0026` and decode back unchanged

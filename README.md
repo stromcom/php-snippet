@@ -263,7 +263,7 @@ All methods return a `SnippetCode` object with:
 ### Escaping and trusted input
 Every option value (user name, email, avatar URL, code, thread name/URL/code/attributes, CSS paths, the selector passed to `thread()`/`home()`, client key/secret, loader URL) is JSON-encoded with `JSON_HEX_TAG | JSON_HEX_AMP`: `<`, `>` and `&` are written as `\u003C`, `\u003E` and `\u0026`, so no value can close the inline `<script>` (`</script>`) or open an HTML comment (`<!--`). The browser decodes the values back unchanged. The data-layer name is written as a bare identifier and must match `[A-Za-z_$][A-Za-z0-9_$]*`, otherwise the constructor throws an `OptionsException`.
 
-**The exception are JS callbacks** — the `ConfOptions` parameters typed `Function`/`HTMLElement` (`notificationRenderer`, `onNotification`, `notificationElementTargetElement`, `notificationElementBeforeRender`, `notificationElementAfterRender`, `homeBeforeRender`, `entityResolve`). They are **inserted verbatim** as JavaScript code. Pass only trusted code written by you, **never user input**.
+**The exception are JS callbacks** — the `ConfOptions` parameters typed `Function`/`HTMLElement` (`notificationRenderer`, `onNotification`, `onLoad`, `notificationElementTargetElement`, `notificationElementBeforeRender`, `notificationElementAfterRender`, `homeBeforeRender`, `entityResolve`). They are **inserted verbatim** as JavaScript code. Pass only trusted code written by you, **never user input**.
 ## Options reference
 ### `UserOptions`
 | Parameter | Type | Required | Description |
@@ -292,6 +292,7 @@ See the full list of parameters in [`src/Options/ConfOptions.php`](src/Options/C
 | `notificationElementPosition` | `?int` | Icon position: 1=top-left, 2=top-right, 3=bottom-right, 4=bottom-left. |
 | `language` | `?string` | UI language of the app. Any language code is accepted; one without a translation falls back to the browser language, then English. `null` follows the browser. |
 | `theme` | `?string` | Light/dark mode for the app. Values: `null` (follows browser preference), `stromcom-default`, `stromcom-dark`. |
+| `onLoad` | `?string` | JS callback invoked once the widget is running (user set, apps rendered). Receives the widget API. From then on `stromCom.openHome()`, `closeHome()` and `toggleHome()` work. |
 | `entityResolve` | `?string` | JS callback resolving business-entity detail (order, ticket…) for the message editor's chip hover-card. Receives `{type, id, groups, url}`, returns (or resolves to) `{title, url?, fields: [{label, value}]}`. |
 
 JS callbacks passed as strings are wrapped in a `Promise` that resolves on `DOMContentLoaded`, so they can reference elements further down the page. A `conf()` script injected **after** `DOMContentLoaded` (AJAX, Turbo, client-side navigation) never resolves them — print `conf()` in the initial HTML of the page.
@@ -316,6 +317,33 @@ Both accept a single URL or a list, and both are loaded **after** the widget's o
 stylesheet, so your rules win. `appCSSPath` is applied on top of the `customCSSPath`
 from the project settings, and — like it — only on a plan that allows appearance
 customization; without it the app ignores both.
+
+### Notification center from your own element
+The default bubble opens the notification center over the whole page. To open it from
+an element that already exists in your app (a toolbar button, a menu item), leave
+`notificationElementPosition` unset (the bubble renders only when it is set), keep the
+count in your own badge and call the widget's commands:
+
+```php
+echo $client->conf(new ConfOptions(
+    onNotification: 'function(counts) { document.querySelector("#messages-badge").textContent = counts.thread + counts.notification; }',
+    onLoad: 'function() { document.querySelector("#messages-button").disabled = false; }',
+))->getHTML();
+```
+
+```html
+<button id="messages-button" disabled onclick="stromCom.toggleHome()">Messages <span id="messages-badge"></span></button>
+```
+
+| Command | Effect |
+|---|---|
+| `stromCom.openHome()` | Opens the notification center (creates it on the first call). |
+| `stromCom.closeHome()` | Hides it. A click on the backdrop does the same. |
+| `stromCom.toggleHome()` | Opens or hides it, like a click on the default bubble. |
+
+The commands are installed by the widget itself, so they exist only once the loader
+script has run, and they do nothing until the user is set (they log a warning). Enable
+your element in `onLoad`. All three return a `Promise`.
 
 ### UI language
 Set the language on `ConfOptions`, the same way as the theme. Any language code is accepted — the widget uses English for a language it has no translation for, so passing one is never an error. When omitted, the language is detected from the browser.

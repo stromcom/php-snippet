@@ -82,10 +82,12 @@ class Generator {
       $useDocs = $withDocs ?? $this->withDocs;
       $json    = $this->buildJson($options, $useDocs);
 
-      if ($useDocs) {
+      if ($useDocs && $options->getOnLoad() === null) {
         $onLoad = <<<JS
                    {
                       /**
+                       * Called once the widget is running — from then on stromCom.openHome(),
+                       * closeHome() and toggleHome() work.
                        * @param {Object} api
                        */
                       onLoad : function(api) {

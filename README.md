@@ -341,9 +341,10 @@ echo $client->conf(new ConfOptions(
 | `stromCom.closeHome()` | Hides it. A click on the backdrop does the same. |
 | `stromCom.toggleHome()` | Opens or hides it, like a click on the default bubble. |
 
-The commands are installed by the widget itself, so they exist only once the loader
-script has run, and they do nothing until the user is set (they log a warning). Enable
-your element in `onLoad`. All three return a `Promise`.
+The commands are installed by the widget itself once it starts — after the loader script
+has run and the user is set. Until then `stromCom.openHome` and the others don't exist,
+so enable your element in `onLoad`. `onLoad` fires once, when the widget starts: print
+it in the `conf()` that is on the page together with `user()`, not in a later one.
 
 ### UI language
 Set the language on `ConfOptions`, the same way as the theme. Any language code is accepted — the widget uses English for a language it has no translation for, so passing one is never an error. When omitted, the language is detected from the browser.

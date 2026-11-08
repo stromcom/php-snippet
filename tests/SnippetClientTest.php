@@ -87,6 +87,12 @@ class SnippetClientTest extends TestCase {
   }
 
   #[Test]
+  public function conf_output_contains_notification_interval(): void {
+    $code = $this->client->conf(new ConfOptions(notificationInterval: 30))->getCode();
+    $this->assertStringContainsString('"notificationInterval": 30', $code);
+  }
+
+  #[Test]
   public function conf_output_keeps_empty_options_as_an_object(): void {
     $this->assertStringContainsString('stromCom.conf({', $this->client->conf(new ConfOptions())->getCode());
   }

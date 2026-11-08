@@ -87,7 +87,7 @@ class Generator {
                    {
                       /**
                        * Called once the widget is running — from then on stromCom.openHome(),
-                       * closeHome() and toggleHome() work.
+                       * closeHome(), toggleHome() and refreshNotifications() work.
                        * @param {Object} api
                        */
                       onLoad : function(api) {

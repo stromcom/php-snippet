@@ -59,8 +59,11 @@ class ConfOptions extends SnippetOptions {
   #[Docs('Callback resolving business-entity detail for the message editor chip hover-card. Receives {type, id, groups, url}, returns an object (or Promise) with {title, url?, fields: [{label, value}]}', null, true, 'Function|null')]
   private ?string $entityResolve = null;
 
-  #[Docs('Callback invoked once the widget is running (user set, apps rendered); from then on stromCom.openHome(), closeHome() and toggleHome() work. Receives the widget API.', null, false, 'Function|null')]
+  #[Docs('Callback invoked once the widget is running (user set, apps rendered); from then on stromCom.openHome(), closeHome(), toggleHome() and refreshNotifications() work. Receives the widget API.', null, false, 'Function|null')]
   private ?string $onLoad = null;
+
+  #[Docs('How often the widget asks for unread counts, in seconds. Default 120, at least 5 (a lower value is raised to 5).', '120', true, 'Number|null')]
+  private ?int $notificationInterval = null;
 
   /**
    * @param array<string, string|int|float|null>|null $notificationElementStyles
@@ -87,6 +90,7 @@ class ConfOptions extends SnippetOptions {
     null|string|array $appFrameCSSPath = null,
     null|string|array $appCSSPath = null,
     ?string $onLoad = null,
+    ?int    $notificationInterval = null,
   ) {
     $this->notificationRenderer             = $notificationRenderer;
     $this->onNotification                   = $onNotification;
@@ -105,6 +109,7 @@ class ConfOptions extends SnippetOptions {
     $this->appFrameCSSPath                  = $appFrameCSSPath;
     $this->appCSSPath                       = $appCSSPath;
     $this->onLoad                           = $onLoad;
+    $this->notificationInterval             = $notificationInterval;
   }
 
   public function getNotificationRenderer(): ?string {
@@ -208,6 +213,10 @@ class ConfOptions extends SnippetOptions {
 
   public function renderOnLoad(): ?JsValue {
     return $this->wrapJsValue($this->onLoad);
+  }
+
+  public function getNotificationInterval(): ?int {
+    return $this->notificationInterval;
   }
 
   private function wrapJsValue(?string $value): ?JsValue {

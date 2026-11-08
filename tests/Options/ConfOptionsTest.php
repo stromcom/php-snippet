@@ -56,6 +56,18 @@ class ConfOptionsTest extends TestCase {
   }
 
   #[Test]
+  public function notification_interval_is_included_when_set(): void {
+    $result = (new ConfOptions(notificationInterval: 30))->getOptions();
+
+    $this->assertSame(30, $result['notificationInterval']);
+  }
+
+  #[Test]
+  public function notification_interval_is_left_out_by_default(): void {
+    $this->assertArrayNotHasKey('notificationInterval', (new ConfOptions())->getOptions());
+  }
+
+  #[Test]
   public function on_load_null_is_left_out_of_docs(): void {
     $this->assertArrayNotHasKey('onLoad', (new ConfOptions())->getOptions(true));
   }

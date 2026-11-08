@@ -286,13 +286,14 @@ See the full list of parameters in [`src/Options/ConfOptions.php`](src/Options/C
 |---|---|---|
 | `notificationRenderer` | `?string` | JS function for custom notification rendering. |
 | `onNotification` | `?string` | JS callback for new message count changes. |
+| `notificationInterval` | `?int` | How often the widget asks for unread counts, in seconds. Default `120`, at least `5` — a lower value is raised to 5. For a user who has no account yet the widget never asks more often than every 240 s. |
 | `appFrameCSSPath` | `string\|string[]\|null` | CSS for the widget frame — the shadow root holding the container, the backdrop and the iframe. |
 | `appCSSPath` | `string\|string[]\|null` | CSS for the app itself (inside the iframe), on top of the CSS from the project settings. |
 | `notificationElementTargetElement` | `?string` | JS expression returning the target DOM element. |
 | `notificationElementPosition` | `?int` | Icon position: 1=top-left, 2=top-right, 3=bottom-right, 4=bottom-left. |
 | `language` | `?string` | UI language of the app. Any language code is accepted; one without a translation falls back to the browser language, then English. `null` follows the browser. |
 | `theme` | `?string` | Light/dark mode for the app. Values: `null` (follows browser preference), `stromcom-default`, `stromcom-dark`. |
-| `onLoad` | `?string` | JS callback invoked once the widget is running (user set, apps rendered). Receives the widget API. From then on `stromCom.openHome()`, `closeHome()` and `toggleHome()` work. |
+| `onLoad` | `?string` | JS callback invoked once the widget is running (user set, apps rendered). Receives the widget API. From then on `stromCom.openHome()`, `closeHome()`, `toggleHome()` and `refreshNotifications()` work. |
 | `entityResolve` | `?string` | JS callback resolving business-entity detail (order, ticket…) for the message editor's chip hover-card. Receives `{type, id, groups, url}`, returns (or resolves to) `{title, url?, fields: [{label, value}]}`. |
 
 JS callbacks passed as strings are wrapped in a `Promise` that resolves on `DOMContentLoaded`, so they can reference elements further down the page. A `conf()` script injected **after** `DOMContentLoaded` (AJAX, Turbo, client-side navigation) never resolves them — print `conf()` in the initial HTML of the page.
@@ -340,11 +341,24 @@ echo $client->conf(new ConfOptions(
 | `stromCom.openHome()` | Opens the notification center (creates it on the first call). |
 | `stromCom.closeHome()` | Hides it. A click on the backdrop does the same. |
 | `stromCom.toggleHome()` | Opens or hides it, like a click on the default bubble. |
+| `stromCom.refreshNotifications()` | Loads the unread counts right away instead of waiting for the next check (`notificationInterval`). Passes them on like a regular check (`onNotification`, the bubble, open threads) and returns a `Promise` with `{thread, message, notification, reaction}`. Calls at the same time share one request; at most one request per 5 s, otherwise it returns the last known counts. |
 
 The commands are installed by the widget itself once it starts — after the loader script
 has run and the user is set. Until then `stromCom.openHome` and the others don't exist,
 so enable your element in `onLoad`. `onLoad` fires once, when the widget starts: print
 it in the `conf()` that is on the page together with `user()`, not in a later one.
+
+Your badge gets new counts every `notificationInterval` seconds (120 by default). To update
+it sooner — when the user comes back to the tab, or after an action in your app — call
+`refreshNotifications()`:
+
+```php
+echo $client->conf(new ConfOptions(
+    onNotification: 'function(counts) { document.querySelector("#messages-badge").textContent = counts.thread + counts.notification + counts.reaction; }',
+    onLoad: 'function() { document.addEventListener("visibilitychange", function() { if (!document.hidden) stromCom.refreshNotifications(); }); }',
+    notificationInterval: 60,
+))->getHTML();
+```
 
 ### UI language
 Set the language on `ConfOptions`, the same way as the theme. Any language code is accepted — the widget uses English for a language it has no translation for, so passing one is never an error. When omitted, the language is detected from the browser.

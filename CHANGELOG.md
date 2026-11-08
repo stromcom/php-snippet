@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+### Added
+- `notificationInterval` option on `ConfOptions` — how often the widget asks for unread counts, in seconds (default 120, at least 5). Appended as the last constructor parameter, so positional callers are unaffected
+- Docs: `stromCom.refreshNotifications()` loads the unread counts right away (e.g. when the user returns to the tab) and returns them as a `Promise`
+
 ## [0.7.0] - 2026-10-19
 ### Added
 - `onLoad` option on `ConfOptions` — JS callback invoked once the widget is running. Until now it existed only as a placeholder in docs mode; in docs mode the placeholder is left out when `onLoad` is given. Appended as the last constructor parameter, so positional callers are unaffected

@@ -286,7 +286,7 @@ See the full list of parameters in [`src/Options/ConfOptions.php`](src/Options/C
 |---|---|---|
 | `notificationRenderer` | `?string` | JS function for custom notification rendering. |
 | `onNotification` | `?string` | JS callback for new message count changes. |
-| `notificationInterval` | `?int` | How often the widget asks for unread counts, in seconds. Default `120`, at least `5` — a lower value is raised to 5. For a user who has no account yet the widget never asks more often than every 240 s. |
+| `notificationInterval` | `?int` | How often the widget asks for unread counts, in seconds. Default `120`. A positive value is kept between `5` and `86400` (one day); `0` or a negative value means the default. For a user who has no account yet the widget never asks more often than every 240 s. |
 | `appFrameCSSPath` | `string\|string[]\|null` | CSS for the widget frame — the shadow root holding the container, the backdrop and the iframe. |
 | `appCSSPath` | `string\|string[]\|null` | CSS for the app itself (inside the iframe), on top of the CSS from the project settings. |
 | `notificationElementTargetElement` | `?string` | JS expression returning the target DOM element. |
@@ -341,7 +341,7 @@ echo $client->conf(new ConfOptions(
 | `stromCom.openHome()` | Opens the notification center (creates it on the first call). |
 | `stromCom.closeHome()` | Hides it. A click on the backdrop does the same. |
 | `stromCom.toggleHome()` | Opens or hides it, like a click on the default bubble. |
-| `stromCom.refreshNotifications()` | Loads the unread counts right away instead of waiting for the next check (`notificationInterval`). Passes them on like a regular check (`onNotification`, the bubble, open threads) and returns a `Promise` with `{thread, message, notification, reaction}`. Calls at the same time share one request; at most one request per 5 s, otherwise it returns the last known counts. |
+| `stromCom.refreshNotifications()` | Loads the unread counts right away instead of waiting for the next check (`notificationInterval`). Passes them on like a regular check (`onNotification`, the bubble, open threads) and returns a `Promise` with `{thread, message, notification, reaction}`. Calls at the same time share one request; at most one request per 5 s, otherwise it returns the result of the last request (the counts, or the same error). Works already in `onLoad`. Rejects when the request fails — handle it with `.catch()`. |
 
 The commands are installed by the widget itself once it starts — after the loader script
 has run and the user is set. Until then `stromCom.openHome` and the others don't exist,
@@ -355,7 +355,7 @@ it sooner — when the user comes back to the tab, or after an action in your ap
 ```php
 echo $client->conf(new ConfOptions(
     onNotification: 'function(counts) { document.querySelector("#messages-badge").textContent = counts.thread + counts.notification + counts.reaction; }',
-    onLoad: 'function() { document.addEventListener("visibilitychange", function() { if (!document.hidden) stromCom.refreshNotifications(); }); }',
+    onLoad: 'function() { document.addEventListener("visibilitychange", function() { if (!document.hidden) stromCom.refreshNotifications().catch(function() {}); }); }',
     notificationInterval: 60,
 ))->getHTML();
 ```

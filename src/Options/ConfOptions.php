@@ -62,7 +62,7 @@ class ConfOptions extends SnippetOptions {
   #[Docs('Callback invoked once the widget is running (user set, apps rendered); from then on stromCom.openHome(), closeHome(), toggleHome() and refreshNotifications() work. Receives the widget API.', null, false, 'Function|null')]
   private ?string $onLoad = null;
 
-  #[Docs('How often the widget asks for unread counts, in seconds. Default 120, at least 5 (a lower value is raised to 5).', '120', true, 'Number|null')]
+  #[Docs('How often the widget asks for unread counts, in seconds. Default 120; a positive value is kept between 5 and 86400 (one day).', '120', true, 'Number|null')]
   private ?int $notificationInterval = null;
 
   /**
